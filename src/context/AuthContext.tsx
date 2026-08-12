@@ -31,33 +31,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setToken(null);
           setUser(null);
         }
-      } else {
-        // Auto-login as Super Admin for smooth preview testing
-        try {
-          const res = await api.login('admin@tenderflow.com', 'admin123');
-          localStorage.setItem('tf_jwt_token', res.token);
-          setToken(res.token);
-          setUser(res.user);
-        } catch (e) {
-          console.error('Auto login fallback failed, using default Super Admin:', e);
-          setUser({
-            id: 'u-001',
-            name: 'Super Admin',
-            email: 'admin@tenderflow.com',
-            role: 'Super Admin',
-            department: 'Management',
-            status: 'Active',
-            createdAt: new Date().toISOString()
-          });
-        }
       }
       setLoading(false);
     }
     loadUser();
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (emailInput: string, password: string) => {
     setLoading(true);
+    const email = emailInput.toLowerCase() === 'admin' ? 'admin@tenderflow.com' : emailInput;
     try {
       const res = await api.login(email, password);
       localStorage.setItem('tf_jwt_token', res.token);
@@ -74,6 +56,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         'mgmt@tenderflow.com': 'Management / Viewer'
       };
       const assignedRole = roleMap[email] || 'Super Admin';
+      const fakeToken = `token-${Date.now()}`;
+      localStorage.setItem('tf_jwt_token', fakeToken);
+      setToken(fakeToken);
       setUser({
         id: `user-${Date.now()}`,
         name: email.split('@')[0].toUpperCase(),
