@@ -1,0 +1,333 @@
+import { Router, Response } from 'express';
+import { db, Tender } from '../db.js';
+import { authenticateToken, authorizeRoles, AuthRequest } from '../middleware/auth.js';
+
+const router = Router();
+
+// GET all tenders with search and filter
+router.get('/', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { search, status, department, category, minVal, maxVal } = req.query;
+  let result = [...db.get.tenders];
+
+  if (search) {
+    const q = (search as string).toLowerCase();
+    result = result.filter(t =>
+      t.name.toLowerCase().includes(q) ||
+      t.refNumber.toLowerCase().includes(q) ||
+      t.clientName.toLowerCase().includes(q) ||
+      t.location.toLowerCase().includes(q)
+    );
+  }
+
+  if (status) {
+    result = result.filter(t => t.tenderStatus === status);
+  }
+
+  if (department) {
+    result = result.filter(t => t.department === department);
+  }
+
+  if (category) {
+    result = result.filter(t => t.projectCategory === category);
+  }
+
+  if (minVal) {
+    result = result.filter(t => t.estimatedValue >= Number(minVal));
+  }
+
+  if (maxVal) {
+    result = result.filter(t => t.estimatedValue <= Number(maxVal));
+  }
+
+  // Calculate financial fields dynamically for each tender
+  const enriched = result.map(t => {
+    const quoteDiff = (t.quotedAmount || 0) - (t.estimatedValue || 0);
+    const quoteVariancePct = t.estimatedValue > 0 ? (quoteDiff / t.estimatedValue) * 100 : 0;
+    const awardDiff = (t.awardedAmount || 0) - (t.quotedAmount || 0);
+
+    return {
+      ...t,
+      quoteDiff,
+      quoteVariancePct,
+      awardDiff
+    };
+  });
+
+  return res.json(enriched);
+});
+
+// GET single tender analytics
+router.get('/analytics', authenticateToken, (req: AuthRequest, res: Response) => {
+  const tenders = db.get.tenders;
+  const completed = tenders.filter(t => ['Won', 'Lost'].includes(t.tenderStatus));
+  const won = tenders.filter(t => t.tenderStatus === 'Won');
+  const lost = tenders.filter(t => t.tenderStatus === 'Lost');
+
+  const winRate = completed.length > 0 ? (won.length / completed.length) * 100 : 0;
+  const totalQuotedValue = tenders.reduce((acc, t) => acc + (t.quotedAmount || 0), 0);
+  const totalAwardedValue = won.reduce((acc, t) => acc + (t.awardedAmount || t.quotedAmount || 0), 0);
+
+  // Client-wise performance
+  const clientMap: Record<string, { total: number; won: number; lost: number; quotedVal: number }> = {};
+  tenders.forEach(t => {
+    if (!clientMap[t.clientName]) {
+      clientMap[t.clientName] = { total: 0, won: 0, lost: 0, quotedVal: 0 };
+    }
+    clientMap[t.clientName].total++;
+    if (t.tenderStatus === 'Won') clientMap[t.clientName].won++;
+    if (t.tenderStatus === 'Lost') clientMap[t.clientName].lost++;
+    clientMap[t.clientName].quotedVal += t.quotedAmount || 0;
+  });
+
+  const clientPerformance = Object.entries(clientMap).map(([client, data]) => ({
+    client,
+    total: data.total,
+    won: data.won,
+    lost: data.lost,
+    quotedVal: data.quotedVal
+  }));
+
+  // Category-wise stats
+  const categoryMap: Record<string, { total: number; won: number; value: number }> = {};
+  tenders.forEach(t => {
+    if (!categoryMap[t.projectCategory]) {
+      categoryMap[t.projectCategory] = { total: 0, won: 0, value: 0 };
+    }
+    categoryMap[t.projectCategory].total++;
+    if (t.tenderStatus === 'Won') categoryMap[t.projectCategory].won++;
+    categoryMap[t.projectCategory].value += t.quotedAmount || 0;
+  });
+
+  const categoryPerformance = Object.entries(categoryMap).map(([category, data]) => ({
+    category,
+    total: data.total,
+    won: data.won,
+    value: data.value
+  }));
+
+  return res.json({
+    totalTenders: tenders.length,
+    wonCount: won.length,
+    lostCount: lost.length,
+    winRate,
+    totalQuotedValue,
+    totalAwardedValue,
+    clientPerformance,
+    categoryPerformance
+  });
+});
+
+// GET single tender details
+router.get('/:id', authenticateToken, (req: AuthRequest, res: Response) => {
+  const tender = db.get.tenders.find(t => t.id === req.params.id);
+  if (!tender) {
+    return res.status(404).json({ error: 'Tender not found' });
+  }
+
+  const emd = db.get.emdTransactions.find(e => e.tenderId === tender.id);
+  const docs = db.get.documents.filter(d => d.relatedType === 'Tender' && d.relatedId === tender.id);
+  const project = db.get.projects.find(p => p.tenderId === tender.id);
+
+  const quoteDiff = (tender.quotedAmount || 0) - (tender.estimatedValue || 0);
+  const quoteVariancePct = tender.estimatedValue > 0 ? (quoteDiff / tender.estimatedValue) * 100 : 0;
+  const awardDiff = (tender.awardedAmount || 0) - (tender.quotedAmount || 0);
+
+  return res.json({
+    ...tender,
+    quoteDiff,
+    quoteVariancePct,
+    awardDiff,
+    emd,
+    documents: docs,
+    project
+  });
+});
+
+// POST Create Tender
+router.post('/', authenticateToken, authorizeRoles('Tender Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const body = req.body;
+
+  if (!body.refNumber || !body.name || !body.clientName || !body.submissionDate || !body.estimatedValue) {
+    return res.status(400).json({ error: 'Please provide all required fields (Ref Number, Name, Client, Submission Date, Estimated Value)' });
+  }
+
+  // Check duplicate refNumber
+  if (db.get.tenders.some(t => t.refNumber.toLowerCase() === body.refNumber.toLowerCase())) {
+    return res.status(400).json({ error: `Tender with Reference Number '${body.refNumber}' already exists.` });
+  }
+
+  const newTender: Tender = {
+    id: 't-' + Date.now(),
+    refNumber: body.refNumber,
+    name: body.name,
+    clientName: body.clientName,
+    department: body.department || 'Public Works',
+    departmentType: body.departmentType || 'State Gov',
+    tenderType: body.tenderType || 'Item Rate',
+    projectCategory: body.projectCategory || 'Building',
+    location: body.location || 'Site Location',
+    submissionDate: body.submissionDate,
+    openingDate: body.openingDate || body.submissionDate,
+    estimatedValue: Number(body.estimatedValue) || 0,
+    quotedAmount: Number(body.quotedAmount) || 0,
+    tenderFee: Number(body.tenderFee) || 0,
+    emdRequired: body.emdRequired !== false,
+    emdAmount: Number(body.emdAmount) || 0,
+    emdPaymentDate: body.emdPaymentDate,
+    emdBankAccount: body.emdBankAccount,
+    tenderStatus: body.tenderStatus || 'Draft',
+    competitorInfo: body.competitorInfo,
+    remarks: body.remarks,
+    createdBy: req.user?.id || 'u-001',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  db.get.tenders.unshift(newTender);
+
+  // If EMD required and amount > 0, create initial EMD record if paid
+  if (newTender.emdRequired && newTender.emdAmount > 0 && newTender.emdPaymentDate) {
+    db.get.emdTransactions.unshift({
+      id: 'emd-' + Date.now(),
+      tenderId: newTender.id,
+      tenderName: newTender.name,
+      refNumber: newTender.refNumber,
+      clientName: newTender.clientName,
+      emdAmount: newTender.emdAmount,
+      paymentDate: newTender.emdPaymentDate,
+      bankAccount: newTender.emdBankAccount || 'Corporate Bank Account',
+      transactionRef: 'TRX-' + Date.now(),
+      paymentMethod: 'Bank Guarantee',
+      emdType: 'Standard EMD',
+      expectedRefundDate: new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().split('T')[0],
+      refundAmount: 0,
+      refundStatus: 'Paid',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Created Tender ${newTender.refNumber}`, 'Tenders', newTender.id);
+  db.saveData();
+
+  return res.status(201).json(newTender);
+});
+
+// PUT Update Tender
+router.put('/:id', authenticateToken, authorizeRoles('Tender Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const tender = db.get.tenders.find(t => t.id === req.params.id);
+  if (!tender) {
+    return res.status(404).json({ error: 'Tender not found' });
+  }
+
+  const oldStatus = tender.tenderStatus;
+  Object.assign(tender, req.body, { updatedAt: new Date().toISOString() });
+
+  // Handle status transition to Lost: auto schedule EMD refund
+  if (req.body.tenderStatus === 'Lost' && oldStatus !== 'Lost') {
+    const emd = db.get.emdTransactions.find(e => e.tenderId === tender.id);
+    if (emd && emd.refundStatus === 'Paid') {
+      const resultDate = tender.resultDate ? new Date(tender.resultDate) : new Date();
+      // Result Date + 60 days
+      const expectedRefund = new Date(resultDate.getTime() + 60 * 24 * 3600 * 1000);
+      emd.refundStatus = 'Refund Pending';
+      emd.expectedRefundDate = expectedRefund.toISOString().split('T')[0];
+      emd.updatedAt = new Date().toISOString();
+
+      db.createNotification(
+        'EMD Refund Schedule Created',
+        `EMD of ₹${(emd.emdAmount / 100000).toFixed(2)} Lakhs for lost tender ${tender.refNumber} expected refund by ${emd.expectedRefundDate}`,
+        'High',
+        'EMD',
+        'emd',
+        emd.id
+      );
+    }
+  }
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Updated Tender ${tender.refNumber}`, 'Tenders', tender.id);
+  db.saveData();
+
+  return res.json(tender);
+});
+
+// POST Convert Tender to Project
+router.post('/:id/convert-project', authenticateToken, authorizeRoles('Tender Manager', 'Project Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const tender = db.get.tenders.find(t => t.id === req.params.id);
+  if (!tender) {
+    return res.status(404).json({ error: 'Tender not found' });
+  }
+
+  if (tender.tenderStatus !== 'Won') {
+    return res.status(400).json({ error: 'Only WON tenders can be converted to a Project.' });
+  }
+
+  // Check if project already exists
+  const existingProject = db.get.projects.find(p => p.tenderId === tender.id);
+  if (existingProject) {
+    return res.status(400).json({ error: `Project '${existingProject.projectName}' already created for this tender.` });
+  }
+
+  const { contractNumber, startDate, plannedCompletionDate, projectManagerId, siteSupervisorId, remarks } = req.body;
+
+  if (!contractNumber || !startDate || !plannedCompletionDate) {
+    return res.status(400).json({ error: 'Contract Number, Start Date, and Planned Completion Date are required.' });
+  }
+
+  const newProject = {
+    id: 'p-' + Date.now(),
+    tenderId: tender.id,
+    projectName: tender.name,
+    tenderRef: tender.refNumber,
+    client: tender.clientName,
+    contractNumber,
+    location: tender.location,
+    startDate,
+    plannedCompletionDate,
+    contractValue: tender.awardedAmount || tender.quotedAmount || tender.estimatedValue,
+    awardedAmount: tender.awardedAmount || tender.quotedAmount || tender.estimatedValue,
+    projectManagerId: projectManagerId || 'u-003',
+    siteSupervisorId: siteSupervisorId || 'u-004',
+    status: 'Active' as const,
+    completionPercentage: 0,
+    remarks: remarks || `Converted from Won Tender ${tender.refNumber}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  db.get.projects.unshift(newProject);
+
+  // Convert EMD to Security Deposit if present
+  const emd = db.get.emdTransactions.find(e => e.tenderId === tender.id);
+  if (emd && emd.refundStatus === 'Paid') {
+    emd.refundStatus = 'Converted to Security Deposit';
+    emd.convertedTo = `SD-${newProject.id}`;
+    emd.actualRefundDate = new Date().toISOString().split('T')[0];
+
+    db.get.securityDeposits.unshift({
+      id: 'sd-' + Date.now(),
+      projectId: newProject.id,
+      projectName: newProject.projectName,
+      tenderId: tender.id,
+      depositType: 'Performance Guarantee',
+      amount: emd.emdAmount,
+      depositDate: new Date().toISOString().split('T')[0],
+      bank: emd.bankAccount,
+      refNumber: emd.transactionRef,
+      expectedReleaseDate: plannedCompletionDate,
+      status: 'Active',
+      remarks: 'Converted from Tender EMD upon project award.',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Converted Tender ${tender.refNumber} to Project ${newProject.contractNumber}`, 'Projects', newProject.id);
+  db.createNotification('New Project Created', `Project ${newProject.projectName} created from Won Tender ${tender.refNumber}`, 'Medium', 'Project', 'projects', newProject.id);
+
+  db.saveData();
+
+  return res.status(201).json(newProject);
+});
+
+export default router;

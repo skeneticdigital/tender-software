@@ -1,0 +1,346 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  name              String
+  email             String   @unique
+  role              String
+  department        String
+  phone             String
+  status            String
+  accessibleModules String?  @db.Text
+  avatar            String?
+  passwordHash      String?
+  createdAt         DateTime @default(now())
+}
+
+model Tender {
+  id               String    @id @default(cuid())
+  refNumber        String    @unique
+  name             String
+  clientName       String
+  department       String
+  departmentType   String
+  tenderType       String
+  projectCategory  String
+  location         String
+  submissionDate   String
+  openingDate      String
+  estimatedValue   Float
+  quotedAmount     Float
+  tenderFee        Float
+  emdRequired      Boolean   @default(false)
+  emdAmount        Float
+  emdPaymentDate   String?
+  emdBankAccount   String?
+  tenderStatus     String
+  resultDate       String?
+  awardedAmount    Float?
+  competitorInfo   String?   @db.Text
+  remarks          String?   @db.Text
+  createdBy        String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model EmdTransaction {
+  id                 String    @id @default(cuid())
+  tenderId           String
+  tenderName         String
+  refNumber          String
+  clientName         String
+  emdAmount          Float
+  paymentDate        String
+  bankAccount        String
+  transactionRef     String
+  paymentMethod      String
+  emdType            String
+  expectedRefundDate String
+  actualRefundDate   String?
+  refundAmount       Float     @default(0)
+  refundStatus       String
+  convertedTo        String?
+  remarks            String?   @db.Text
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model SecurityDeposit {
+  id                  String    @id @default(cuid())
+  projectId           String
+  projectName         String
+  tenderId            String?
+  depositType         String
+  amount              Float
+  depositDate         String
+  bank                String
+  refNumber           String
+  expectedReleaseDate String
+  actualReleaseDate   String?
+  status              String
+  remarks             String?   @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model Project {
+  id                     String    @id @default(cuid())
+  tenderId               String?
+  projectName            String
+  tenderRef              String
+  client                 String
+  contractNumber         String
+  location               String
+  startDate              String
+  plannedCompletionDate  String
+  actualCompletionDate   String?
+  contractValue          Float
+  awardedAmount          Float
+  projectManagerId       String?
+  siteSupervisorId       String?
+  status                 String
+  completionPercentage   Float     @default(0)
+  remarks                String?   @db.Text
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+}
+
+model ProjectSite {
+  id           String    @id @default(cuid())
+  projectId    String
+  siteName     String
+  location     String
+  supervisorId String?
+  status       String
+}
+
+model Material {
+  id             String    @id @default(cuid())
+  materialCode   String    @unique
+  name           String
+  category       String
+  unit           String
+  specification  String?
+  minStockLevel  Float     @default(0)
+  reorderLevel   Float     @default(0)
+  currentStock   Float     @default(0)
+  supplierName   String?
+  unitRate       Float     @default(0)
+  remarks        String?   @db.Text
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model MaterialDispatch {
+  id             String    @id @default(cuid())
+  dispatchCode   String    @unique
+  projectId      String
+  projectName    String?
+  siteId         String?
+  siteName       String?
+  materialId     String
+  materialName   String?
+  batchNumber    String
+  dispatchDate   String
+  quantity       Float
+  unit           String
+  vehicleNumber  String
+  driverName     String
+  issuedById     String
+  issuedByName   String?
+  receivedById   String?
+  status         String
+  remarks        String?   @db.Text
+  createdAt      DateTime  @default(now())
+}
+
+model MaterialReceipt {
+  id               String    @id @default(cuid())
+  receiptCode      String    @unique
+  dispatchId       String
+  projectId        String
+  materialId       String
+  receivedQuantity Float
+  damagedQuantity  Float     @default(0)
+  acceptedQuantity Float
+  receivedDate     String
+  receivedById     String
+  receivedByName   String?
+  remarks          String?   @db.Text
+  createdAt        DateTime  @default(now())
+}
+
+model MaterialConsumption {
+  id               String    @id @default(cuid())
+  projectId        String
+  projectName      String?
+  siteId           String?
+  siteName         String?
+  materialId       String
+  materialName     String?
+  consumptionDate  String
+  quantityConsumed Float
+  unit             String
+  workCategory     String
+  supervisorId     String
+  supervisorName   String?
+  remarks          String?   @db.Text
+  createdAt        DateTime  @default(now())
+}
+
+model StockAlert {
+  id                  String    @id @default(cuid())
+  projectId           String?
+  materialId          String
+  materialName        String
+  currentStock        Float
+  reorderLevel        Float
+  suggestedReorderQty Float
+  alertDate           String
+  status              String
+}
+
+model Bill {
+  id                    String    @id @default(cuid())
+  billNumber            String    @unique
+  projectId             String
+  projectName           String?
+  clientName            String
+  billDate              String
+  billingPeriod         String
+  workDescription       String    @db.Text
+  grossAmount           Float
+  gstAmount             Float
+  grossWithTax          Float
+  totalDeductions       Float     @default(0)
+  retentionAmount       Float     @default(0)
+  netPayable            Float
+  submittedDate         String?
+  approvedDate          String?
+  paymentDueDate        String
+  paymentReceivedDate   String?
+  paymentReceivedAmount Float     @default(0)
+  outstandingAmount     Float
+  status                String
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model BillItem {
+  id          String    @id @default(cuid())
+  billId      String
+  description String
+  boqItem     String
+  quantity    Float
+  unit        String
+  rate        Float
+  amount      Float
+}
+
+model BillDeduction {
+  id               String    @id @default(cuid())
+  billId           String
+  deductionTypeId  String?
+  deductionName    String
+  percentage       Float
+  fixedAmount      Float
+  calculatedAmount Float
+}
+
+model DeductionType {
+  id                String    @id @default(cuid())
+  name              String
+  defaultPercentage Float
+  fixedAmount       Float
+  calculationBase   String
+  isActive          Boolean   @default(true)
+}
+
+model Payment {
+  id             String    @id @default(cuid())
+  billId         String
+  billNumber     String?
+  projectId      String
+  projectName    String?
+  invoiceAmount  Float
+  amountReceived Float
+  balance        Float
+  paymentDate    String
+  paymentMethod  String
+  bankName       String
+  transactionRef String
+  remarks        String?   @db.Text
+  createdAt      DateTime  @default(now())
+}
+
+model Retention {
+  id                  String    @id @default(cuid())
+  projectId           String
+  projectName         String?
+  billId              String
+  billNumber          String?
+  retentionPercentage Float
+  retentionAmount     Float
+  retentionDate       String
+  expectedReleaseDate String
+  actualReleaseDate   String?
+  status              String
+  remarks             String?   @db.Text
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model AppDocument {
+  id          String    @id @default(cuid())
+  relatedType String
+  relatedId   String
+  relatedName String?
+  category    String
+  fileName    String
+  fileType    String
+  fileSize    String
+  fileUrl     String
+  uploadedBy  String
+  uploadDate  String
+}
+
+model AppNotification {
+  id            String    @id @default(cuid())
+  userId        String?
+  title         String
+  message       String    @db.Text
+  priority      String
+  type          String
+  relatedModule String?
+  relatedId     String?
+  isRead        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  userId      String
+  userName    String
+  userRole    String
+  action      String
+  module      String
+  recordId    String?
+  oldValue    String?   @db.Text
+  newValue    String?   @db.Text
+  ipAddress   String?
+  createdAt   DateTime  @default(now())
+}
+
+model SystemSetting {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  value       String    @db.Text
+  description String    @db.Text
+}

@@ -1,0 +1,27 @@
+import { Router, Response } from 'express';
+import { db } from '../db.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+
+const router = Router();
+
+router.get('/', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { module, search } = req.query;
+  let logs = [...db.get.auditLogs];
+
+  if (module) {
+    logs = logs.filter(l => l.module.toLowerCase() === (module as string).toLowerCase());
+  }
+
+  if (search) {
+    const q = (search as string).toLowerCase();
+    logs = logs.filter(l =>
+      l.userName.toLowerCase().includes(q) ||
+      l.action.toLowerCase().includes(q) ||
+      l.module.toLowerCase().includes(q)
+    );
+  }
+
+  return res.json(logs);
+});
+
+export default router;

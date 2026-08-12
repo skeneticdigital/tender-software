@@ -1,0 +1,65 @@
+import { Router, Response } from 'express';
+import { db, AppDocument } from '../db.js';
+import { authenticateToken, AuthRequest } from '../middleware/auth.js';
+
+const router = Router();
+
+// GET Documents with search and related filters
+router.get('/', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { relatedType, relatedId, category, search } = req.query;
+  let docs = [...db.get.documents];
+
+  if (relatedType) {
+    docs = docs.filter(d => d.relatedType === relatedType);
+  }
+
+  if (relatedId) {
+    docs = docs.filter(d => d.relatedId === relatedId);
+  }
+
+  if (category) {
+    docs = docs.filter(d => d.category === category);
+  }
+
+  if (search) {
+    const q = (search as string).toLowerCase();
+    docs = docs.filter(d =>
+      d.fileName.toLowerCase().includes(q) ||
+      d.category.toLowerCase().includes(q) ||
+      (d.relatedName && d.relatedName.toLowerCase().includes(q))
+    );
+  }
+
+  return res.json(docs);
+});
+
+// POST Upload / Attach Document
+router.post('/', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { relatedType, relatedId, relatedName, category, fileName, fileType, fileSize, fileUrl } = req.body;
+
+  if (!relatedType || !relatedId || !fileName || !category) {
+    return res.status(400).json({ error: 'Related Type, Related ID, File Name, and Category are required.' });
+  }
+
+  const newDoc: AppDocument = {
+    id: 'doc-' + Date.now(),
+    relatedType,
+    relatedId,
+    relatedName: relatedName || 'Related Record',
+    category,
+    fileName,
+    fileType: fileType || 'pdf',
+    fileSize: fileSize || '1.5 MB',
+    fileUrl: fileUrl || '#',
+    uploadedBy: req.user?.name || 'User',
+    uploadDate: new Date().toISOString()
+  };
+
+  db.get.documents.unshift(newDoc);
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Uploaded document '${fileName}' under ${category}`, 'Documents', newDoc.id);
+  db.saveData();
+
+  return res.status(201).json(newDoc);
+});
+
+export default router;

@@ -1,0 +1,6 @@
+{
+  "name": "TenderFlow ERP",
+  "description": "Tender, Project, Material & Financial Management System for Construction and Infrastructure Contracting",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

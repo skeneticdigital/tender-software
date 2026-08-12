@@ -1,0 +1,70 @@
+import { Router, Response } from 'express';
+import bcrypt from 'bcryptjs';
+import { db, User } from '../db.js';
+import { authenticateToken, authorizeRoles, AuthRequest } from '../middleware/auth.js';
+
+const router = Router();
+
+// GET all users
+router.get('/', authenticateToken, authorizeRoles('Super Admin', 'Admin'), (req: AuthRequest, res: Response) => {
+  const users = db.get.users.map(({ passwordHash, ...u }) => u);
+  return res.json(users);
+});
+
+// POST Create new User
+router.post('/', authenticateToken, authorizeRoles('Super Admin', 'Admin'), async (req: AuthRequest, res: Response) => {
+  const { name, email, password, role, department, phone } = req.body;
+
+  if (!name || !email || !password || !role) {
+    return res.status(400).json({ error: 'Name, Email, Password, and Role are required.' });
+  }
+
+  if (db.get.users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+    return res.status(400).json({ error: 'User with this email address already exists.' });
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(password, salt);
+
+  const newUser: User = {
+    id: 'u-' + Date.now(),
+    name,
+    email: email.toLowerCase(),
+    passwordHash: hash,
+    role,
+    department: department || 'General',
+    phone: phone || '',
+    status: 'Active',
+    createdAt: new Date().toISOString()
+  };
+
+  db.get.users.unshift(newUser);
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Created User ${newUser.name} (${newUser.role})`, 'Users', newUser.id);
+  db.saveData();
+
+  const { passwordHash, ...userWithoutPassword } = newUser;
+  return res.status(201).json(userWithoutPassword);
+});
+
+// PUT Update User Role / Status
+router.put('/:id', authenticateToken, authorizeRoles('Super Admin', 'Admin'), (req: AuthRequest, res: Response) => {
+  const user = db.get.users.find(u => u.id === req.params.id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  const { role, status, name, department, phone } = req.body;
+  if (role) user.role = role;
+  if (status) user.status = status;
+  if (name) user.name = name;
+  if (department) user.department = department;
+  if (phone) user.phone = phone;
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Updated User details for ${user.email}`, 'Users', user.id);
+  db.saveData();
+
+  const { passwordHash, ...userWithoutPassword } = user;
+  return res.json(userWithoutPassword);
+});
+
+export default router;

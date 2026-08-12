@@ -1,0 +1,296 @@
+import { Router, Response } from 'express';
+import { db, Bill, BillItem, BillDeduction, Payment, Retention } from '../db.js';
+import { authenticateToken, authorizeRoles, AuthRequest } from '../middleware/auth.js';
+
+const router = Router();
+
+// GET Bills List
+router.get('/', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { projectId, status, search } = req.query;
+  let result = [...db.get.bills];
+
+  if (projectId) {
+    result = result.filter(b => b.projectId === projectId);
+  }
+
+  if (status) {
+    result = result.filter(b => b.status === status);
+  }
+
+  if (search) {
+    const q = (search as string).toLowerCase();
+    result = result.filter(b =>
+      b.billNumber.toLowerCase().includes(q) ||
+      b.clientName.toLowerCase().includes(q) ||
+      (b.projectName && b.projectName.toLowerCase().includes(q))
+    );
+  }
+
+  return res.json(result);
+});
+
+// GET Bill Details
+router.get('/:id', authenticateToken, (req: AuthRequest, res: Response) => {
+  const bill = db.get.bills.find(b => b.id === req.params.id);
+  if (!bill) {
+    return res.status(404).json({ error: 'Bill not found' });
+  }
+
+  const items = db.get.billItems.filter(i => i.billId === bill.id);
+  const deductions = db.get.billDeductions.filter(d => d.billId === bill.id);
+  const payments = db.get.payments.filter(p => p.billId === bill.id);
+  const retention = db.get.retentions.find(r => r.billId === bill.id);
+
+  return res.json({
+    ...bill,
+    items,
+    deductions,
+    payments,
+    retention
+  });
+});
+
+// POST Create Bill
+router.post('/', authenticateToken, authorizeRoles('Accounts Manager', 'Project Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const { projectId, billNumber, billDate, billingPeriod, workDescription, items, customDeductions, paymentDueDate, gstRate = 18 } = req.body;
+
+  if (!projectId || !billNumber || !billDate || !paymentDueDate || !items || !Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'Project, Bill Number, Bill Date, Payment Due Date, and at least one Bill Item are required.' });
+  }
+
+  const project = db.get.projects.find(p => p.id === projectId);
+  if (!project) {
+    return res.status(404).json({ error: 'Project not found' });
+  }
+
+  // Check duplicate bill number
+  if (db.get.bills.some(b => b.billNumber.toLowerCase() === billNumber.toLowerCase())) {
+    return res.status(400).json({ error: `Bill with number '${billNumber}' already exists.` });
+  }
+
+  const billId = 'b-' + Date.now();
+
+  // 1. Calculate Gross Amount from BOQ Items
+  const processedItems: BillItem[] = items.map((item: any, idx: number) => {
+    const qty = Number(item.quantity) || 0;
+    const rate = Number(item.rate) || 0;
+    const amount = qty * rate;
+    return {
+      id: `bi-${Date.now()}-${idx}`,
+      billId,
+      description: item.description || 'Work Item',
+      boqItem: item.boqItem || `ITEM-${idx + 1}`,
+      quantity: qty,
+      unit: item.unit || 'Units',
+      rate,
+      amount
+    };
+  });
+
+  const grossAmount = processedItems.reduce((acc, item) => acc + item.amount, 0);
+  const gstAmount = (grossAmount * Number(gstRate)) / 100;
+  const grossWithTax = grossAmount + gstAmount;
+
+  // 2. Calculate Deductions (from Configured Deduction Types or custom selections)
+  const deductionTypes = db.get.deductionTypes.filter(d => d.isActive);
+  const processedDeductions: BillDeduction[] = [];
+  let totalDeductions = 0;
+  let retentionAmount = 0;
+
+  if (customDeductions && Array.isArray(customDeductions)) {
+    customDeductions.forEach((d: any, idx: number) => {
+      const pct = Number(d.percentage) || 0;
+      const fixed = Number(d.fixedAmount) || 0;
+      const calcAmount = fixed > 0 ? fixed : (grossAmount * pct) / 100;
+
+      processedDeductions.push({
+        id: `bd-${Date.now()}-${idx}`,
+        billId,
+        deductionTypeId: d.deductionTypeId,
+        deductionName: d.deductionName || 'Deduction',
+        percentage: pct,
+        fixedAmount: fixed,
+        calculatedAmount: calcAmount
+      });
+
+      totalDeductions += calcAmount;
+      if (d.deductionName?.toLowerCase().includes('retention')) {
+        retentionAmount += calcAmount;
+      }
+    });
+  } else {
+    // Apply standard configured deduction rules
+    deductionTypes.forEach((dt, idx) => {
+      const pct = dt.defaultPercentage || 0;
+      const fixed = dt.fixedAmount || 0;
+      const calcAmount = fixed > 0 ? fixed : (grossAmount * pct) / 100;
+
+      processedDeductions.push({
+        id: `bd-${Date.now()}-${idx}`,
+        billId,
+        deductionTypeId: dt.id,
+        deductionName: dt.name,
+        percentage: pct,
+        fixedAmount: fixed,
+        calculatedAmount: calcAmount
+      });
+
+      totalDeductions += calcAmount;
+      if (dt.name.toLowerCase().includes('retention')) {
+        retentionAmount += calcAmount;
+      }
+    });
+  }
+
+  const netPayable = grossWithTax - totalDeductions;
+
+  const newBill: Bill = {
+    id: billId,
+    billNumber,
+    projectId,
+    projectName: project.projectName,
+    clientName: project.client,
+    billDate,
+    billingPeriod: billingPeriod || 'Current Billing Period',
+    workDescription: workDescription || '',
+    grossAmount,
+    gstAmount,
+    grossWithTax,
+    totalDeductions,
+    retentionAmount,
+    netPayable,
+    submittedDate: new Date().toISOString().split('T')[0],
+    paymentDueDate,
+    paymentReceivedAmount: 0,
+    outstandingAmount: netPayable,
+    status: 'Submitted',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  db.get.bills.unshift(newBill);
+  db.get.billItems.push(...processedItems);
+  db.get.billDeductions.push(...processedDeductions);
+
+  // Automatically create Retention Record if retention money was deducted
+  if (retentionAmount > 0) {
+    const plannedReleaseDate = new Date(project.plannedCompletionDate);
+    plannedReleaseDate.setFullYear(plannedReleaseDate.getFullYear() + 1); // 1 Year Default
+
+    const newRetention: Retention = {
+      id: 'ret-' + Date.now(),
+      projectId: project.id,
+      projectName: project.projectName,
+      billId: newBill.id,
+      billNumber: newBill.billNumber,
+      retentionPercentage: grossAmount > 0 ? (retentionAmount / grossAmount) * 100 : 5,
+      retentionAmount,
+      retentionDate: billDate,
+      expectedReleaseDate: plannedReleaseDate.toISOString().split('T')[0],
+      status: 'Held',
+      remarks: `Retention withheld from Bill ${newBill.billNumber}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.get.retentions.unshift(newRetention);
+  }
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Created Bill ${newBill.billNumber} Net Payable ₹${netPayable.toLocaleString('en-IN')}`, 'Billing', newBill.id);
+  db.saveData();
+
+  return res.status(201).json({
+    ...newBill,
+    items: processedItems,
+    deductions: processedDeductions
+  });
+});
+
+// POST Record Payment against Bill
+router.post('/payment', authenticateToken, authorizeRoles('Accounts Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const { billId, amountReceived, paymentDate, paymentMethod, bankName, transactionRef, remarks } = req.body;
+
+  if (!billId || !amountReceived || Number(amountReceived) <= 0 || !paymentDate || !bankName || !transactionRef) {
+    return res.status(400).json({ error: 'Bill, valid Amount Received, Payment Date, Bank Name, and Transaction Reference are required.' });
+  }
+
+  const bill = db.get.bills.find(b => b.id === billId);
+  if (!bill) {
+    return res.status(404).json({ error: 'Bill not found' });
+  }
+
+  const amt = Number(amountReceived);
+  if (amt > bill.outstandingAmount + 10) {
+    return res.status(400).json({
+      error: `Payment amount (₹${amt.toLocaleString('en-IN')}) cannot exceed current outstanding amount (₹${bill.outstandingAmount.toLocaleString('en-IN')}).`
+    });
+  }
+
+  const project = db.get.projects.find(p => p.id === bill.projectId);
+
+  const newPayment: Payment = {
+    id: 'pay-' + Date.now(),
+    billId: bill.id,
+    billNumber: bill.billNumber,
+    projectId: bill.projectId,
+    projectName: project?.projectName,
+    invoiceAmount: bill.netPayable,
+    amountReceived: amt,
+    balance: bill.outstandingAmount - amt,
+    paymentDate,
+    paymentMethod: paymentMethod || 'NEFT/RTGS',
+    bankName,
+    transactionRef,
+    remarks,
+    createdAt: new Date().toISOString()
+  };
+
+  db.get.payments.unshift(newPayment);
+
+  // Update Bill Financial State
+  bill.paymentReceivedAmount = (bill.paymentReceivedAmount || 0) + amt;
+  bill.outstandingAmount = Math.max(0, bill.netPayable - bill.paymentReceivedAmount);
+  bill.paymentReceivedDate = paymentDate;
+
+  if (bill.outstandingAmount <= 1) {
+    bill.status = 'Paid';
+  } else {
+    bill.status = 'Partially Paid';
+  }
+  bill.updatedAt = new Date().toISOString();
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Recorded Payment ₹${amt.toLocaleString('en-IN')} against Bill ${bill.billNumber}`, 'Billing', bill.id);
+  db.saveData();
+
+  return res.status(201).json(newPayment);
+});
+
+// GET Payments List
+router.get('/payments/list', authenticateToken, (req: AuthRequest, res: Response) => {
+  return res.json(db.get.payments);
+});
+
+// GET Retentions List
+router.get('/retentions/list', authenticateToken, (req: AuthRequest, res: Response) => {
+  return res.json(db.get.retentions);
+});
+
+// PUT Update Retention Status
+router.put('/retentions/:id', authenticateToken, authorizeRoles('Accounts Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const ret = db.get.retentions.find(r => r.id === req.params.id);
+  if (!ret) {
+    return res.status(404).json({ error: 'Retention record not found' });
+  }
+
+  const { status, actualReleaseDate, remarks } = req.body;
+  if (status) ret.status = status;
+  if (actualReleaseDate) ret.actualReleaseDate = actualReleaseDate;
+  if (remarks !== undefined) ret.remarks = remarks;
+  ret.updatedAt = new Date().toISOString();
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Updated Retention Status to '${ret.status}' for Bill ${ret.billNumber}`, 'Retention', ret.id);
+  db.saveData();
+
+  return res.json(ret);
+});
+
+export default router;

@@ -1,0 +1,162 @@
+import { Router, Response } from 'express';
+import { db, EmdTransaction, SecurityDeposit } from '../db.js';
+import { authenticateToken, authorizeRoles, AuthRequest } from '../middleware/auth.js';
+
+const router = Router();
+
+// GET all EMD Transactions
+router.get('/', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { status, search } = req.query;
+  let result = [...db.get.emdTransactions];
+
+  if (status) {
+    result = result.filter(e => e.refundStatus === status);
+  }
+
+  if (search) {
+    const q = (search as string).toLowerCase();
+    result = result.filter(e =>
+      e.tenderName.toLowerCase().includes(q) ||
+      e.refNumber.toLowerCase().includes(q) ||
+      e.clientName.toLowerCase().includes(q) ||
+      e.transactionRef.toLowerCase().includes(q)
+    );
+  }
+
+  return res.json(result);
+});
+
+// GET Security Deposits
+router.get('/security-deposits', authenticateToken, (req: AuthRequest, res: Response) => {
+  const { status, search } = req.query;
+  let result = [...db.get.securityDeposits];
+
+  if (status) {
+    result = result.filter(s => s.status === status);
+  }
+
+  if (search) {
+    const q = (search as string).toLowerCase();
+    result = result.filter(s =>
+      s.projectName.toLowerCase().includes(q) ||
+      s.refNumber.toLowerCase().includes(q) ||
+      s.bank.toLowerCase().includes(q)
+    );
+  }
+
+  return res.json(result);
+});
+
+// POST Create EMD Transaction
+router.post('/', authenticateToken, authorizeRoles('Tender Manager', 'Accounts Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const body = req.body;
+
+  if (!body.tenderId || !body.emdAmount || !body.paymentDate || !body.bankAccount) {
+    return res.status(400).json({ error: 'Tender ID, EMD Amount, Payment Date, and Bank Account are required.' });
+  }
+
+  const tender = db.get.tenders.find(t => t.id === body.tenderId);
+
+  const newEmd: EmdTransaction = {
+    id: 'emd-' + Date.now(),
+    tenderId: body.tenderId,
+    tenderName: tender?.name || body.tenderName || 'Tender',
+    refNumber: tender?.refNumber || body.refNumber || 'REF',
+    clientName: tender?.clientName || body.clientName || 'Client',
+    emdAmount: Number(body.emdAmount),
+    paymentDate: body.paymentDate,
+    bankAccount: body.bankAccount,
+    transactionRef: body.transactionRef || 'TRX-' + Date.now(),
+    paymentMethod: body.paymentMethod || 'Bank Guarantee',
+    emdType: body.emdType || 'Standard EMD',
+    expectedRefundDate: body.expectedRefundDate || new Date(Date.now() + 60 * 24 * 3600 * 1000).toISOString().split('T')[0],
+    refundAmount: 0,
+    refundStatus: 'Paid',
+    remarks: body.remarks,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  db.get.emdTransactions.unshift(newEmd);
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Recorded EMD Payment ₹${newEmd.emdAmount} for ${newEmd.refNumber}`, 'EMD', newEmd.id);
+  db.saveData();
+
+  return res.status(201).json(newEmd);
+});
+
+// PUT Update EMD Refund Status
+router.put('/:id', authenticateToken, authorizeRoles('Tender Manager', 'Accounts Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const emd = db.get.emdTransactions.find(e => e.id === req.params.id);
+  if (!emd) {
+    return res.status(404).json({ error: 'EMD transaction not found' });
+  }
+
+  const { refundStatus, actualRefundDate, refundAmount, remarks } = req.body;
+
+  if (refundStatus) emd.refundStatus = refundStatus;
+  if (actualRefundDate) emd.actualRefundDate = actualRefundDate;
+  if (refundAmount !== undefined) emd.refundAmount = Number(refundAmount);
+  if (remarks !== undefined) emd.remarks = remarks;
+  emd.updatedAt = new Date().toISOString();
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Updated EMD Refund Status to '${emd.refundStatus}' for ${emd.refNumber}`, 'EMD', emd.id);
+  db.saveData();
+
+  return res.json(emd);
+});
+
+// POST Create Security Deposit
+router.post('/security-deposits', authenticateToken, authorizeRoles('Accounts Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const body = req.body;
+
+  if (!body.projectId || !body.amount || !body.depositDate || !body.expectedReleaseDate) {
+    return res.status(400).json({ error: 'Project ID, Amount, Deposit Date, and Expected Release Date are required.' });
+  }
+
+  const project = db.get.projects.find(p => p.id === body.projectId);
+
+  const newSd: SecurityDeposit = {
+    id: 'sd-' + Date.now(),
+    projectId: body.projectId,
+    projectName: project?.projectName || body.projectName || 'Project',
+    tenderId: body.tenderId,
+    depositType: body.depositType || 'Performance Guarantee',
+    amount: Number(body.amount),
+    depositDate: body.depositDate,
+    bank: body.bank || 'Bank',
+    refNumber: body.refNumber || 'REF-' + Date.now(),
+    expectedReleaseDate: body.expectedReleaseDate,
+    status: 'Active',
+    remarks: body.remarks,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  db.get.securityDeposits.unshift(newSd);
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Created Security Deposit ₹${newSd.amount} for ${newSd.projectName}`, 'Security Deposit', newSd.id);
+  db.saveData();
+
+  return res.status(201).json(newSd);
+});
+
+// PUT Update Security Deposit Release
+router.put('/security-deposits/:id', authenticateToken, authorizeRoles('Accounts Manager', 'Admin', 'Super Admin'), (req: AuthRequest, res: Response) => {
+  const sd = db.get.securityDeposits.find(s => s.id === req.params.id);
+  if (!sd) {
+    return res.status(404).json({ error: 'Security deposit not found' });
+  }
+
+  const { status, actualReleaseDate, remarks } = req.body;
+
+  if (status) sd.status = status;
+  if (actualReleaseDate) sd.actualReleaseDate = actualReleaseDate;
+  if (remarks !== undefined) sd.remarks = remarks;
+  sd.updatedAt = new Date().toISOString();
+
+  db.logAudit(req.user!.id, req.user!.name, req.user!.role, `Updated Security Deposit Status to '${sd.status}' for ${sd.projectName}`, 'Security Deposit', sd.id);
+  db.saveData();
+
+  return res.json(sd);
+});
+
+export default router;
