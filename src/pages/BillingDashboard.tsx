@@ -116,7 +116,6 @@ export const BillingDashboard: React.FC = () => {
     }
   };
 
-  return (
   const handleDownloadBill = (bill: Bill) => {
     const billNum = bill.billNumber || bill.billNo || 'RA-01/2026/MAD';
     const content = `=====================================================
