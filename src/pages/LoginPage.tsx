@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, ShieldCheck, ArrowRight, Building2, UserCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
-  const [identifier, setIdentifier] = useState('admin');
-  const [password, setPassword] = useState('admin123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,11 +23,6 @@ export const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickLogin = (email: string) => {
-    setIdentifier(email);
-    setPassword('admin123');
   };
 
   return (
@@ -70,7 +65,7 @@ export const LoginPage: React.FC = () => {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Enter username (admin) or email"
+                placeholder="Enter username or email"
                 className="w-full pl-10 pr-4 py-3 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
               />
             </div>
@@ -87,7 +82,7 @@ export const LoginPage: React.FC = () => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password (admin123)"
+                placeholder="Enter password"
                 className="w-full pl-10 pr-4 py-3 bg-slate-800/90 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all font-medium"
               />
             </div>
@@ -108,34 +103,6 @@ export const LoginPage: React.FC = () => {
             )}
           </button>
         </form>
-
-        {/* Quick Demo Access Credentials Helper */}
-        <div className="pt-4 border-t border-slate-800/80 space-y-3">
-          <div className="flex items-center justify-between text-[11px] text-slate-400 font-semibold">
-            <span>Quick Login Presets:</span>
-            <span className="text-blue-400 font-bold">Password: admin123</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('admin')}
-              className="px-3 py-2 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-[11px] font-bold text-slate-200 flex items-center justify-between transition-colors"
-            >
-              <span>Super Admin</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('pm@tenderflow.com')}
-              className="px-3 py-2 bg-slate-800/60 hover:bg-slate-800 border border-slate-700/50 rounded-xl text-[11px] font-bold text-slate-200 flex items-center justify-between transition-colors"
-            >
-              <span>Project Manager</span>
-              <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
-            </button>
-          </div>
-        </div>
 
       </div>
 
