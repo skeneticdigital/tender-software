@@ -60,77 +60,97 @@ const mockUser: User = {
 const mockTenders: Tender[] = [
   {
     id: 't-001',
-    title: 'Construction of 4-Lane Bypass Highway',
-    tenderNo: 'NHAI/2026/TN-042',
-    authority: 'NHAI Tamil Nadu',
-    category: 'Highways & Roads',
-    estimatedValue: 145000000,
-    emdAmount: 1450000,
-    publishDate: '2026-05-01',
-    submissionDeadline: '2026-06-15',
-    status: 'Active',
-    tenderType: 'Open Tender',
+    refNumber: 'NHAI/2026/TN-042',
+    name: 'Construction of 4-Lane Bypass Highway',
+    clientName: 'NHAI Tamil Nadu',
+    department: 'Highways Division',
+    departmentType: 'Central Gov',
+    tenderType: 'Item Rate',
+    projectCategory: 'Highways',
     location: 'Madurai, TN',
-    preparedBy: 'Karthik Raja',
-    createdAt: '2026-05-01T10:00:00Z'
+    submissionDate: '2026-06-15T10:00:00Z',
+    openingDate: '2026-06-16T11:00:00Z',
+    estimatedValue: 145000000,
+    quotedAmount: 142000000,
+    tenderFee: 10000,
+    emdRequired: true,
+    emdAmount: 1450000,
+    tenderStatus: 'Submitted',
+    quoteVariancePct: -2.07,
+    createdBy: 'u-001',
+    createdAt: '2026-05-01T10:00:00Z',
+    updatedAt: '2026-05-01T10:00:00Z'
   },
   {
     id: 't-002',
-    title: 'Water Supply Augmentation & Pipeline Scheme',
-    tenderNo: 'TWAD/2026/WS-109',
-    authority: 'TWAD Board Chennai',
-    category: 'Water & Sanitation',
-    estimatedValue: 85000000,
-    emdAmount: 850000,
-    publishDate: '2026-04-15',
-    submissionDeadline: '2026-05-25',
-    status: 'Under Technical Evaluation',
-    tenderType: 'Open Tender',
+    refNumber: 'TWAD/2026/WS-109',
+    name: 'Water Supply Augmentation & Pipeline Scheme',
+    clientName: 'TWAD Board Chennai',
+    department: 'Water Supply Div',
+    departmentType: 'State Gov',
+    tenderType: 'EPC',
+    projectCategory: 'Water Supply',
     location: 'Coimbatore, TN',
-    preparedBy: 'Karthik Raja',
-    createdAt: '2026-04-15T10:00:00Z'
+    submissionDate: '2026-05-25T10:00:00Z',
+    openingDate: '2026-05-26T11:00:00Z',
+    estimatedValue: 85000000,
+    quotedAmount: 84000000,
+    tenderFee: 5000,
+    emdRequired: true,
+    emdAmount: 850000,
+    tenderStatus: 'Under Evaluation',
+    quoteVariancePct: -1.18,
+    createdBy: 'u-001',
+    createdAt: '2026-04-15T10:00:00Z',
+    updatedAt: '2026-04-15T10:00:00Z'
   }
 ];
 
 const mockProjects: Project[] = [
   {
     id: 'p-001',
-    title: 'Madurai Ring Road Expansion Project',
-    code: 'PRJ-2026-001',
-    clientName: 'NHAI Tamil Nadu',
+    contractNumber: 'CONT/NHAI/2026/001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    tenderRef: 'NHAI/2026/TN-042',
+    client: 'NHAI Tamil Nadu',
     location: 'Madurai, TN',
-    contractValue: 145000000,
     startDate: '2026-01-15',
-    endDate: '2027-06-30',
-    status: 'In Progress',
-    projectManager: 'Priya Sundaram',
-    progress: 42,
-    createdAt: '2026-01-15T00:00:00Z'
+    plannedCompletionDate: '2027-06-30',
+    contractValue: 145000000,
+    awardedAmount: 142000000,
+    status: 'Active',
+    completionPercentage: 42,
+    createdAt: '2026-01-15T00:00:00Z',
+    updatedAt: '2026-01-15T00:00:00Z'
   }
 ];
 
 const mockMaterials: Material[] = [
   {
     id: 'm-001',
-    code: 'MAT-CEM-53',
+    materialCode: 'MAT-CEM-53',
     name: 'OPC 53 Grade Cement',
     category: 'Cement & Concrete',
     unit: 'Bags',
-    unitPrice: 385,
-    currentStock: 1200,
+    unitRate: 385,
+    specification: 'IS 12269:2013 UltraTech / Dalmia',
+    minStockLevel: 200,
     reorderLevel: 500,
-    status: 'Normal'
+    currentStock: 1200,
+    supplierName: 'UltraTech Cement Ltd'
   },
   {
     id: 'm-002',
-    code: 'MAT-STL-16',
+    materialCode: 'MAT-STL-16',
     name: 'TMT Steel Bars 16mm Fe550D',
     category: 'Steel & Rebar',
     unit: 'MT',
-    unitPrice: 62500,
-    currentStock: 45,
+    unitRate: 62500,
+    specification: 'IS 1786:2008 Tata Tiscon / JSW',
+    minStockLevel: 10,
     reorderLevel: 20,
-    status: 'Normal'
+    currentStock: 45,
+    supplierName: 'Tata Steel Infrastructure'
   }
 ];
 

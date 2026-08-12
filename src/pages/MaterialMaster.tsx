@@ -194,7 +194,7 @@ export const MaterialMaster: React.FC = () => {
                             e.stopPropagation();
                             openEditModal(m);
                           }}
-                          className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
                           title="Edit Material"
                         >
                           <Pencil className="w-4 h-4" />
