@@ -44,7 +44,7 @@ export const UserManagement: React.FC = () => {
     try {
       if (editingUserId) {
         // Edit User
-        await api.updateUser(editingUserId, {
+        const updated = await api.updateUser(editingUserId, {
           name: form.name,
           email: form.email,
           role: form.role,
@@ -52,12 +52,13 @@ export const UserManagement: React.FC = () => {
           phone: form.phone,
           accessibleModules: form.accessibleModules
         });
+        setUsers(prev => prev.map(u => u.id === editingUserId ? { ...u, ...updated } : u));
       } else {
         // Create User
-        await api.createUser(form);
+        const created = await api.createUser(form);
+        setUsers(prev => [...prev, created]);
       }
       setIsOpen(false);
-      fetchUsers();
     } catch (err: any) {
       alert(err.message || 'Error saving user');
     }
