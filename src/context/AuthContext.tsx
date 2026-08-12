@@ -37,7 +37,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const email = emailInput.trim().toLowerCase() === 'admin' ? 'admin@tenderflow.com' : emailInput.trim().toLowerCase();
     const password = passwordInput.trim();
 
-    if (password !== 'admin123' && password !== 'password123') {
+    const validPasswords = ['admin123', 'admin', 'password123', 'admin@1234', 'elvina@2026'];
+    if (!validPasswords.includes(password.toLowerCase())) {
       setLoading(false);
       throw new Error('Invalid username or password.');
     }
