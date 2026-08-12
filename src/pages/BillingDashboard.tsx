@@ -347,23 +347,34 @@ startxref
                         <button
                           onClick={() => setSelectedBillId(b.id)}
                           className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
-                          title="View Bill"
+                          title="View Bill Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDownloadBill(b)}
-                          className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
-                          title="Download Bill File"
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                          title="Download PDF Invoice"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setSelectedBillId(b.id)}
-                          className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                          className="p-1.5 hover:bg-amber-50 text-amber-600 rounded-lg transition-colors"
                           title="Edit Bill"
                         >
                           <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete bill "${b.billNumber || b.billNo}"?`)) {
+                              setBills(prev => prev.filter(x => x.id !== b.id));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
+                          title="Delete Bill"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

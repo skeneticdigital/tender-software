@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Warehouse, Truck, CheckCircle2, AlertTriangle, Send, Download, Layers, Pencil } from 'lucide-react';
+import { Warehouse, Truck, CheckCircle2, AlertTriangle, Send, Download, Layers, Pencil, Trash2 } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Material, Project } from '../types';
@@ -175,26 +175,26 @@ export const InventoryDashboard: React.FC = () => {
                 inventory.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-4 py-3.5">
-                      <div className="font-bold text-slate-900">{item.name}</div>
+                      <div className="font-bold text-slate-900">{item.name || item.materialName || item.materialCode}</div>
                       <div className="text-[10px] text-slate-400">{item.materialCode}</div>
                     </td>
 
-                    <td className="px-4 py-3.5 font-semibold text-slate-700">{item.category}</td>
+                    <td className="px-4 py-3.5 font-semibold text-slate-700">{item.category || 'Construction Materials'}</td>
 
                     <td className="px-4 py-3.5 text-right font-black text-slate-900 text-sm">
-                      {item.currentStock} <span className="text-xs font-normal text-slate-500">{item.unit}</span>
+                      {item.centralStock || item.currentStock || 0} <span className="text-xs font-normal text-slate-500">{item.unit}</span>
                     </td>
 
                     <td className="px-4 py-3.5 text-right font-bold text-blue-700">
-                      {item.totalDispatched} {item.unit}
+                      {item.totalDispatched || 0} {item.unit}
                     </td>
 
                     <td className="px-4 py-3.5 text-right font-bold text-slate-800">
-                      {item.totalConsumed} {item.unit}
+                      {item.totalConsumed || 0} {item.unit}
                     </td>
 
                     <td className="px-4 py-3.5 text-right text-slate-600 font-medium">
-                      {item.reorderLevel} {item.unit}
+                      {item.reorderLevel || 0} {item.unit}
                     </td>
 
                     <td className="px-4 py-3.5">
@@ -209,13 +209,27 @@ export const InventoryDashboard: React.FC = () => {
                       </button>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <button
-                        onClick={() => openEditModal(item)}
-                        className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded-lg text-[11px] font-bold transition-colors border border-blue-200"
-                        title="Update Inventory Stock"
-                      >
-                        Update Stock
-                      </button>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => openEditModal(item)}
+                          className="px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded-lg text-[11px] font-bold transition-colors border border-blue-200 flex items-center gap-1"
+                          title="Update Inventory Stock"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Update
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete item "${item.name || item.materialCode}"?`)) {
+                              setInventory(prev => prev.filter(x => x.id !== item.id));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors border border-rose-100"
+                          title="Delete Inventory Item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

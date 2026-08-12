@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, CheckCircle2 } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
 import { api, formatINR, formatLakhsCr } from '../lib/api';
 import { Retention } from '../types';
 import { Badge } from '../components/ui/Badge';
@@ -80,14 +80,39 @@ export const RetentionDashboard: React.FC = () => {
                       <Badge variant={r.status === 'Released' ? 'success' : 'warning'}>{r.status}</Badge>
                     </td>
                     <td className="px-4 py-3.5 text-center">
-                      {r.status !== 'Released' && (
+                      <div className="flex items-center justify-center gap-1">
+                        {r.status !== 'Released' && (
+                          <button
+                            onClick={() => handleStatusUpdate(r.id, 'Released')}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold"
+                          >
+                            Mark Released
+                          </button>
+                        )}
                         <button
-                          onClick={() => handleStatusUpdate(r.id, 'Released')}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold"
+                          onClick={() => {
+                            const newStatus = prompt(`Update status for Retention Money "${r.billNumber || r.billNo}" (Withheld / Released):`, r.status);
+                            if (newStatus) {
+                              setRetentions(prev => prev.map(x => x.id === r.id ? { ...x, status: newStatus as any } : x));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
+                          title="Edit Retention Record"
                         >
-                          Mark Released
+                          <Pencil className="w-4 h-4" />
                         </button>
-                      )}
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete retention record for bill "${r.billNumber || r.billNo}"?`)) {
+                              setRetentions(prev => prev.filter(x => x.id !== r.id));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
+                          title="Delete Retention Record"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

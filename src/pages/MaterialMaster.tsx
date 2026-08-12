@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Plus, AlertTriangle, Layers, Pencil } from 'lucide-react';
+import { Package, Search, Plus, AlertTriangle, Layers, Pencil, Trash2 } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Material } from '../types';
@@ -189,16 +189,30 @@ export const MaterialMaster: React.FC = () => {
                         </Badge>
                       </td>
                       <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditModal(m);
-                          }}
-                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
-                          title="Edit Material"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditModal(m);
+                            }}
+                            className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                            title="Edit Material"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm(`Are you sure you want to delete material "${m.name}"?`)) {
+                                setMaterials(prev => prev.filter(x => x.id !== m.id));
+                              }
+                            }}
+                            className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
+                            title="Delete Material"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

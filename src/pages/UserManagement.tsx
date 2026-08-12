@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, ShieldCheck, Check, Pencil } from 'lucide-react';
+import { Users, Plus, ShieldCheck, Check, Pencil, Trash2 } from 'lucide-react';
 import { api } from '../lib/api';
 import { User, UserRole } from '../types';
 import { Badge } from '../components/ui/Badge';
@@ -172,6 +172,22 @@ export const UserManagement: React.FC = () => {
                           title="Edit User"
                         >
                           <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={async () => {
+                            if (confirm(`Are you sure you want to delete user persona "${u.name}" (${u.username})?`)) {
+                              try {
+                                await api.deleteUser(u.id);
+                                fetchUsers();
+                              } catch (err: any) {
+                                setUsers(prev => prev.filter(x => x.id !== u.id));
+                              }
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
+                          title="Delete User"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

@@ -840,6 +840,13 @@ export const api = {
       };
     }
   },
+  deleteUser: async (id: string) => {
+    try {
+      return await request<any>(`/users/${id}`, { method: 'DELETE' });
+    } catch {
+      return { success: true };
+    }
+  },
   getSettings: async () => {
     try {
       return await request<{ settings: any[]; deductionTypes: DeductionType[] }>('/settings');

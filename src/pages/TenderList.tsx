@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Search, Filter, Eye, Pencil, ArrowUpDown, Landmark, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { FileText, Plus, Search, Filter, Eye, Pencil, ArrowUpDown, Landmark, CheckCircle2, AlertTriangle, Trash2 } from 'lucide-react';
 import { api, formatLakhsCr, formatINR } from '../lib/api';
 import { Tender } from '../types';
 import { Badge } from '../components/ui/Badge';
@@ -192,15 +192,27 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
                         <button
                           onClick={() => setSelectedDetailsId(t.id)}
                           className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
-                          title="View Full Details"
+                          title="View Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors"
+                          onClick={() => setSelectedDetailsId(t.id)}
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
                           title="Edit Tender"
                         >
                           <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete tender "${t.name}"?`)) {
+                              setTenders(prev => prev.filter(x => x.id !== t.id));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
+                          title="Delete Tender"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

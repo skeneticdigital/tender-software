@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HardHat, Search, Plus, Pencil } from 'lucide-react';
+import { HardHat, Search, Plus, Pencil, Trash2 } from 'lucide-react';
 import { api, formatLakhsCr } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Project } from '../types';
@@ -223,16 +223,30 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
                       <Badge variant={p.status === 'Active' ? 'success' : 'info'}>{p.status}</Badge>
                     </td>
                     <td className="px-6 py-4 text-right whitespace-nowrap">
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditModal(p);
-                        }}
-                        className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
-                        title="Edit Project"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(p);
+                          }}
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
+                          title="Edit Project"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Are you sure you want to delete project "${p.projectName}"?`)) {
+                              setProjects(prev => prev.filter(x => x.id !== p.id));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
+                          title="Delete Project"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

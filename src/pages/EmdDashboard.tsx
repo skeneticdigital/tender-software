@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Landmark, Search, ShieldCheck, Clock, CheckCircle2, AlertTriangle, RefreshCw, IndianRupee } from 'lucide-react';
+import { Landmark, Search, ShieldCheck, Clock, CheckCircle2, AlertTriangle, RefreshCw, IndianRupee, Pencil, Trash2 } from 'lucide-react';
 import { api, formatINR, formatLakhsCr } from '../lib/api';
 import { EmdTransaction, SecurityDeposit } from '../types';
 import { Badge } from '../components/ui/Badge';
@@ -189,20 +189,35 @@ export const EmdDashboard: React.FC = () => {
                       </td>
 
                       <td className="px-4 py-3.5 text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedEmd(e);
-                            setEmdUpdateForm({
-                              refundStatus: e.refundStatus,
-                              actualRefundDate: e.actualRefundDate || new Date().toISOString().split('T')[0],
-                              refundAmount: e.refundAmount || e.emdAmount,
-                              remarks: e.remarks || ''
-                            });
-                          }}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded text-[11px]"
-                        >
-                          Update Status
-                        </button>
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => {
+                              setSelectedEmd(e);
+                              setEmdUpdateForm({
+                                refundStatus: e.refundStatus,
+                                actualRefundDate: e.actualRefundDate || new Date().toISOString().split('T')[0],
+                                refundAmount: e.refundAmount || e.emdAmount,
+                                remarks: e.remarks || ''
+                              });
+                            }}
+                            className="px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white rounded font-bold text-[11px] transition-colors flex items-center gap-1 border border-blue-200"
+                            title="Edit / Update EMD"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Update
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to delete EMD transaction "${e.refNumber}"?`)) {
+                                setEmds(prev => prev.filter(x => x.id !== e.id));
+                              }
+                            }}
+                            className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
+                            title="Delete EMD"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -225,6 +240,7 @@ export const EmdDashboard: React.FC = () => {
                   <th className="px-4 py-3.5">Deposit Date</th>
                   <th className="px-4 py-3.5">Release Date</th>
                   <th className="px-4 py-3.5">Status</th>
+                  <th className="px-4 py-3.5 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
@@ -241,6 +257,33 @@ export const EmdDashboard: React.FC = () => {
                     <td className="px-4 py-3.5 font-semibold text-slate-800">{s.expectedReleaseDate}</td>
                     <td className="px-4 py-3.5">
                       <Badge variant={s.status === 'Released' ? 'success' : 'info'}>{s.status}</Badge>
+                    </td>
+                    <td className="px-4 py-3.5 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => {
+                            const newStatus = prompt(`Update status for Security Deposit "${s.refNumber}" (Active / Released / Claimed):`, s.status);
+                            if (newStatus) {
+                              setSds(prev => prev.map(x => x.id === s.id ? { ...x, status: newStatus as any } : x));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
+                          title="Edit Security Deposit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete Security Deposit "${s.refNumber}"?`)) {
+                              setSds(prev => prev.filter(x => x.id !== s.id));
+                            }
+                          }}
+                          className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
+                          title="Delete Security Deposit"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
