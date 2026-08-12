@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // Direct state update for offline / Vercel demo
       setUser({
         id: `demo-${role}`,
-        name: `Demo ${role}`,
+        name: role === 'Super Admin' || role === 'Admin' ? 'Gunaseelan' : `Demo ${role}`,
         email,
         role,
         department: 'Management',

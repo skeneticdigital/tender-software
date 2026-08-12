@@ -186,7 +186,9 @@ export const Header: React.FC<HeaderProps> = ({ onSearchChange, onNavigateModule
         {/* User Info & Logout */}
         <div className="pl-2 border-l border-slate-800 flex items-center gap-2">
           <div className="hidden md:block text-right">
-            <div className="text-xs font-semibold text-slate-100">{user?.name}</div>
+            <div className="text-xs font-semibold text-slate-100">
+              {user?.name && user.name !== 'Super Admin' && user.name !== 'ADMIN' ? user.name : 'Gunaseelan'}
+            </div>
             <div className="text-[10px] text-slate-400">{user?.department}</div>
           </div>
 
