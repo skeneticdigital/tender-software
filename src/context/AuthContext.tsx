@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(fakeToken);
     setUser({
       id: 'u-001',
-      name: email === 'admin@tenderflow.com' ? 'Super Admin' : email.split('@')[0].toUpperCase(),
+      name: email === 'admin@tenderflow.com' ? 'Gunaseelan' : email.split('@')[0].toUpperCase(),
       email,
       role: assignedRole,
       department: 'Management',

@@ -48,7 +48,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 // Full Rich Sample Data Collections for All Pages
 const mockUser: User = {
   id: 'u-001',
-  name: 'Super Admin',
+  name: 'Gunaseelan',
   email: 'admin@tenderflow.com',
   role: 'Super Admin',
   department: 'Management',
@@ -306,6 +306,7 @@ const mockInventory = [
 const mockBills: Bill[] = [
   {
     id: 'b-001',
+    billNumber: 'RA-01/2026/MAD',
     billNo: 'RA-01/2026/MAD',
     projectId: 'p-001',
     projectName: 'Madurai Ring Road Expansion Project',
@@ -315,7 +316,9 @@ const mockBills: Bill[] = [
     periodEnd: '2026-04-30',
     grossAmount: 18500000,
     totalDeductions: 1850000,
+    netPayable: 16650000,
     netAmount: 16650000,
+    outstandingAmount: 4650000,
     billDate: '2026-05-05',
     dueDate: '2026-06-05',
     status: 'Submitted',
@@ -354,10 +357,13 @@ const mockRetentions: Retention[] = [
     projectId: 'p-001',
     projectName: 'Madurai Ring Road Expansion Project',
     clientName: 'NHAI Tamil Nadu',
+    billNumber: 'RA-01/2026/MAD',
     billNo: 'RA-01/2026/MAD',
     retentionAmount: 925000,
     retentionRatePct: 5.0,
+    retentionDate: '2026-05-05',
     heldDate: '2026-05-05',
+    withheldDate: '2026-05-05',
     expectedReleaseDate: '2027-07-31',
     status: 'Held',
     createdAt: '2026-05-05T00:00:00Z',
