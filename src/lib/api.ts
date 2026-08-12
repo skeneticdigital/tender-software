@@ -45,7 +45,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return text ? JSON.parse(text) : {};
 }
 
-// Default Fallback Mock Data for Cloud / Vercel Preview
+// Full Rich Sample Data Collections for All Pages
 const mockUser: User = {
   id: 'u-001',
   name: 'Super Admin',
@@ -103,6 +103,29 @@ const mockTenders: Tender[] = [
     createdBy: 'u-001',
     createdAt: '2026-04-15T10:00:00Z',
     updatedAt: '2026-04-15T10:00:00Z'
+  },
+  {
+    id: 't-003',
+    refNumber: 'PWD/2026/BRG-07',
+    name: 'High-Level Bridge Across Vaigai River',
+    clientName: 'PWD Tamil Nadu',
+    department: 'Bridges Wing',
+    departmentType: 'State Gov',
+    tenderType: 'Percentage Rate',
+    projectCategory: 'Bridges',
+    location: 'Madurai, TN',
+    submissionDate: '2026-04-10T10:00:00Z',
+    openingDate: '2026-04-11T11:00:00Z',
+    estimatedValue: 65000000,
+    quotedAmount: 63700000,
+    tenderFee: 5000,
+    emdRequired: true,
+    emdAmount: 650000,
+    tenderStatus: 'Won',
+    quoteVariancePct: -2.00,
+    createdBy: 'u-001',
+    createdAt: '2026-03-20T10:00:00Z',
+    updatedAt: '2026-03-20T10:00:00Z'
   }
 ];
 
@@ -120,8 +143,32 @@ const mockProjects: Project[] = [
     awardedAmount: 142000000,
     status: 'Active',
     completionPercentage: 42,
+    totalBilled: 18500000,
+    totalCollected: 12000000,
+    outstanding: 6500000,
+    retentionHeld: 925000,
     createdAt: '2026-01-15T00:00:00Z',
     updatedAt: '2026-01-15T00:00:00Z'
+  },
+  {
+    id: 'p-002',
+    contractNumber: 'CONT/TWAD/2026/008',
+    projectName: 'Coimbatore Underground Drainage System',
+    tenderRef: 'TWAD/2026/WS-109',
+    client: 'TWAD Board Chennai',
+    location: 'Coimbatore, TN',
+    startDate: '2026-02-01',
+    plannedCompletionDate: '2027-12-31',
+    contractValue: 85000000,
+    awardedAmount: 84000000,
+    status: 'Active',
+    completionPercentage: 28,
+    totalBilled: 12000000,
+    totalCollected: 10000000,
+    outstanding: 2000000,
+    retentionHeld: 600000,
+    createdAt: '2026-02-01T00:00:00Z',
+    updatedAt: '2026-02-01T00:00:00Z'
   }
 ];
 
@@ -151,6 +198,170 @@ const mockMaterials: Material[] = [
     reorderLevel: 20,
     currentStock: 45,
     supplierName: 'Tata Steel Infrastructure'
+  },
+  {
+    id: 'm-003',
+    materialCode: 'MAT-AGG-20',
+    name: 'Coarse Aggregate 20mm',
+    category: 'Aggregates & Sand',
+    unit: 'Cu.m',
+    unitRate: 1450,
+    specification: 'Crushed Granite Stone IS 383',
+    minStockLevel: 50,
+    reorderLevel: 150,
+    currentStock: 680,
+    supplierName: 'Sri Amman Blue Metals'
+  }
+];
+
+const mockEmds: EmdTransaction[] = [
+  {
+    id: 'emd-001',
+    tenderId: 't-001',
+    tenderName: 'Construction of 4-Lane Bypass Highway',
+    refNumber: 'NHAI/2026/TN-042',
+    clientName: 'NHAI Tamil Nadu',
+    emdAmount: 1450000,
+    paymentDate: '2026-05-05',
+    bankAccount: 'HDFC Bank - A/c 50200012345678',
+    transactionRef: 'BG/NHAI/2026/9981',
+    paymentMethod: 'Bank Guarantee',
+    emdType: 'Bid EMD',
+    expectedRefundDate: '2026-07-30',
+    refundAmount: 1450000,
+    refundStatus: 'Refund Pending',
+    createdAt: '2026-05-05T00:00:00Z',
+    updatedAt: '2026-05-05T00:00:00Z'
+  },
+  {
+    id: 'emd-002',
+    tenderId: 't-002',
+    tenderName: 'Water Supply Augmentation & Pipeline Scheme',
+    refNumber: 'TWAD/2026/WS-109',
+    clientName: 'TWAD Board Chennai',
+    emdAmount: 850000,
+    paymentDate: '2026-04-18',
+    bankAccount: 'SBI - A/c 30998877665',
+    transactionRef: 'FDR/TWAD/88712',
+    paymentMethod: 'FDR',
+    emdType: 'Bid EMD',
+    expectedRefundDate: '2026-06-25',
+    refundAmount: 850000,
+    refundStatus: 'Not Paid',
+    createdAt: '2026-04-18T00:00:00Z',
+    updatedAt: '2026-04-18T00:00:00Z'
+  }
+];
+
+const mockSecurityDeposits: SecurityDeposit[] = [
+  {
+    id: 'sd-001',
+    projectId: 'p-001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    tenderId: 't-001',
+    depositType: 'Performance Guarantee',
+    amount: 7250000,
+    depositDate: '2026-01-20',
+    bank: 'HDFC Bank Ltd',
+    refNumber: 'PBG/2026/MAD-001',
+    expectedReleaseDate: '2027-08-30',
+    status: 'Active',
+    createdAt: '2026-01-20T00:00:00Z',
+    updatedAt: '2026-01-20T00:00:00Z'
+  }
+];
+
+const mockInventory = [
+  {
+    id: 'inv-001',
+    materialId: 'm-001',
+    materialCode: 'MAT-CEM-53',
+    materialName: 'OPC 53 Grade Cement',
+    unit: 'Bags',
+    centralStock: 1200,
+    reorderLevel: 500,
+    minStockLevel: 200,
+    siteStocks: [
+      { siteName: 'Madurai Bypass Site #1', stock: 450 },
+      { siteName: 'Coimbatore Pipeline Site #2', stock: 250 }
+    ],
+    status: 'Sufficient'
+  },
+  {
+    id: 'inv-002',
+    materialId: 'm-002',
+    materialCode: 'MAT-STL-16',
+    materialName: 'TMT Steel Bars 16mm Fe550D',
+    unit: 'MT',
+    centralStock: 45,
+    reorderLevel: 20,
+    minStockLevel: 10,
+    siteStocks: [
+      { siteName: 'Madurai Bypass Site #1', stock: 18 }
+    ],
+    status: 'Sufficient'
+  }
+];
+
+const mockBills: Bill[] = [
+  {
+    id: 'b-001',
+    billNo: 'RA-01/2026/MAD',
+    projectId: 'p-001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    clientName: 'NHAI Tamil Nadu',
+    billType: 'Running Account (RA)',
+    periodStart: '2026-04-01',
+    periodEnd: '2026-04-30',
+    grossAmount: 18500000,
+    totalDeductions: 1850000,
+    netAmount: 16650000,
+    billDate: '2026-05-05',
+    dueDate: '2026-06-05',
+    status: 'Submitted',
+    deductions: [
+      { type: 'TDS (Income Tax)', rate: 2.0, amount: 370000 },
+      { type: 'GST TDS', rate: 2.0, amount: 370000 },
+      { type: 'Labour Cess', rate: 1.0, amount: 185000 },
+      { type: 'Retention Money', rate: 5.0, amount: 925000 }
+    ],
+    createdAt: '2026-05-05T00:00:00Z',
+    updatedAt: '2026-05-05T00:00:00Z'
+  }
+];
+
+const mockPayments: Payment[] = [
+  {
+    id: 'pay-001',
+    billId: 'b-001',
+    billNo: 'RA-01/2026/MAD',
+    projectName: 'Madurai Ring Road Expansion Project',
+    clientName: 'NHAI Tamil Nadu',
+    amountReceived: 12000000,
+    paymentDate: '2026-05-20',
+    paymentMode: 'NEFT / RTGS',
+    transactionRef: 'UTIBR5202605200099',
+    bankAccount: 'HDFC Bank - A/c 50200012345678',
+    remarks: 'Part Payment for RA-01 Bill',
+    status: 'Received',
+    createdAt: '2026-05-20T00:00:00Z'
+  }
+];
+
+const mockRetentions: Retention[] = [
+  {
+    id: 'ret-001',
+    projectId: 'p-001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    clientName: 'NHAI Tamil Nadu',
+    billNo: 'RA-01/2026/MAD',
+    retentionAmount: 925000,
+    retentionRatePct: 5.0,
+    heldDate: '2026-05-05',
+    expectedReleaseDate: '2027-07-31',
+    status: 'Held',
+    createdAt: '2026-05-05T00:00:00Z',
+    updatedAt: '2026-05-05T00:00:00Z'
   }
 ];
 
@@ -158,10 +369,39 @@ const mockNotifications: AppNotification[] = [
   {
     id: 'n-001',
     title: 'Tender Submission Deadline Alert',
-    message: 'Madurai Highway tender submission closes in 2 days.',
+    message: 'NHAI Madurai Highway tender submission closes in 2 days.',
     priority: 'High',
     isRead: false,
     createdAt: new Date().toISOString()
+  },
+  {
+    id: 'n-002',
+    title: 'EMD Refund Due Notification',
+    message: 'TWAD EMD amount ₹8.50 Lakhs refund follow-up due.',
+    priority: 'Medium',
+    isRead: false,
+    createdAt: new Date(Date.now() - 86400000).toISOString()
+  }
+];
+
+const mockAuditLogs: AuditLog[] = [
+  {
+    id: 'log-001',
+    userName: 'Rajesh Sharma',
+    userRole: 'Super Admin',
+    action: 'CREATE_USER',
+    module: 'User Management',
+    details: 'Registered new user account Gunaseelan (Project Manager)',
+    timestamp: new Date().toISOString()
+  },
+  {
+    id: 'log-002',
+    userName: 'Karthik Raja',
+    userRole: 'Tender Manager',
+    action: 'SUBMIT_TENDER',
+    module: 'Tenders',
+    details: 'Submitted Tender Quote NHAI/2026/TN-042 (Value: ₹14.20 Cr)',
+    timestamp: new Date(Date.now() - 3600000).toISOString()
   }
 ];
 
@@ -215,6 +455,15 @@ export const api = {
             description: 'NHAI Madurai Highway tender submission due in 2 days',
             linkModule: 'tenders',
             linkId: 't-001'
+          },
+          {
+            id: 'act-2',
+            title: 'EMD Refund Overdue',
+            priority: 'High',
+            type: 'EMD',
+            description: 'TWAD Board EMD ₹8.50 Lakhs pending refund from department',
+            linkModule: 'emd',
+            linkId: 'emd-002'
           }
         ],
         charts: {
@@ -229,7 +478,7 @@ export const api = {
             { month: 'May 2026', billed: 48000000, collected: 41000000 }
           ]
         },
-        recentActivities: [],
+        recentActivities: mockAuditLogs,
         recentNotifications: mockNotifications
       };
     }
@@ -240,7 +489,7 @@ export const api = {
     try {
       const query = new URLSearchParams(params).toString();
       const res = await request<Tender[]>(`/tenders${query ? `?${query}` : ''}`);
-      return Array.isArray(res) ? res : mockTenders;
+      return Array.isArray(res) && res.length > 0 ? res : mockTenders;
     } catch {
       return mockTenders;
     }
@@ -285,9 +534,9 @@ export const api = {
   getEmds: async (params?: Record<string, string>) => {
     try {
       const res = await request<EmdTransaction[]>('/emd');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockEmds;
     } catch {
-      return [];
+      return mockEmds;
     }
   },
   createEmd: async (data: any) => {
@@ -307,9 +556,9 @@ export const api = {
   getSecurityDeposits: async () => {
     try {
       const res = await request<SecurityDeposit[]>('/emd/security-deposits');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockSecurityDeposits;
     } catch {
-      return [];
+      return mockSecurityDeposits;
     }
   },
   createSecurityDeposit: async (data: any) => {
@@ -331,16 +580,47 @@ export const api = {
   getProjects: async (params?: Record<string, string>) => {
     try {
       const res = await request<Project[]>('/projects');
-      return Array.isArray(res) ? res : mockProjects;
+      return Array.isArray(res) && res.length > 0 ? res : mockProjects;
     } catch {
       return mockProjects;
     }
   },
   getProjectDetails: async (id: string) => {
     try {
-      return await request<any>(`/projects/${id}`);
+      const res = await request<any>(`/projects/${id}`);
+      if (res && res.id) return res;
+      throw new Error();
     } catch {
-      return { ...mockProjects[0], id };
+      return {
+        id: id || 'p-001',
+        contractNumber: 'CONT/NHAI/2026/001',
+        projectName: 'Madurai Ring Road Expansion Project',
+        tenderRef: 'NHAI/2026/TN-042',
+        client: 'NHAI Tamil Nadu',
+        location: 'Madurai, TN',
+        startDate: '2026-01-15',
+        plannedCompletionDate: '2027-06-30',
+        contractValue: 145000000,
+        awardedAmount: 142000000,
+        status: 'Active',
+        completionPercentage: 42,
+        totalBilled: 18500000,
+        totalCollected: 12000000,
+        outstanding: 6500000,
+        retentionHeld: 925000,
+        sites: [
+          { id: 's-1', siteName: 'Madurai Bypass Site #1', location: 'Madurai South', supervisorId: 'u-004', status: 'Active' }
+        ],
+        milestones: [
+          { id: 'm-1', name: 'Earthwork & Foundation Leveling', dueDate: '2026-03-31', progress: 100, status: 'Completed' },
+          { id: 'm-2', name: 'Sub-Base Granular Layer (GSB)', dueDate: '2026-06-30', progress: 65, status: 'In Progress' },
+          { id: 'm-3', name: 'Bituminous Macadam Laying', dueDate: '2026-10-31', progress: 0, status: 'Pending' }
+        ],
+        boqItems: [
+          { id: 'boq-1', itemCode: 'BOQ-01', description: 'Excavation in Hard Soil / Rock', quantity: 25000, unit: 'Cu.m', rate: 450, totalAmount: 11250000, executedQty: 25000 },
+          { id: 'boq-2', itemCode: 'BOQ-02', description: 'Granular Sub-Base (GSB) Construction', quantity: 18000, unit: 'Cu.m', rate: 1200, totalAmount: 21600000, executedQty: 11700 }
+        ]
+      };
     }
   },
   createProject: async (data: Partial<Project>) => {
@@ -362,7 +642,7 @@ export const api = {
   getMaterials: async (params?: Record<string, string>) => {
     try {
       const res = await request<Material[]>('/materials');
-      return Array.isArray(res) ? res : mockMaterials;
+      return Array.isArray(res) && res.length > 0 ? res : mockMaterials;
     } catch {
       return mockMaterials;
     }
@@ -384,9 +664,9 @@ export const api = {
   getInventory: async () => {
     try {
       const res = await request<any[]>('/materials/inventory');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockInventory;
     } catch {
-      return [];
+      return mockInventory;
     }
   },
   dispatchMaterial: async (data: any) => {
@@ -415,16 +695,16 @@ export const api = {
   getBills: async (params?: Record<string, string>) => {
     try {
       const res = await request<Bill[]>('/billing');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockBills;
     } catch {
-      return [];
+      return mockBills;
     }
   },
   getBillDetails: async (id: string) => {
     try {
       return await request<any>(`/billing/${id}`);
     } catch {
-      return { id, billNo: 'INV/2026/001', grossAmount: 15000000, netAmount: 13500000 };
+      return mockBills[0];
     }
   },
   createBill: async (data: any) => {
@@ -444,17 +724,17 @@ export const api = {
   getPayments: async () => {
     try {
       const res = await request<Payment[]>('/billing/payments/list');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockPayments;
     } catch {
-      return [];
+      return mockPayments;
     }
   },
   getRetentions: async () => {
     try {
       const res = await request<Retention[]>('/billing/retentions/list');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockRetentions;
     } catch {
-      return [];
+      return mockRetentions;
     }
   },
   updateRetention: async (id: string, data: any) => {
@@ -470,7 +750,12 @@ export const api = {
     try {
       return await request<any>(`/reports/${reportType}`);
     } catch {
-      return { data: [] };
+      return {
+        summary: { totalBilled: 340000000, totalCollected: 298000000, retentionHeld: 17000000, tdsDeducted: 6800000 },
+        data: [
+          { project: 'Madurai Ring Road Expansion Project', billed: 18500000, collected: 12000000, outstanding: 6500000 }
+        ]
+      };
     }
   },
 
@@ -478,7 +763,7 @@ export const api = {
   getNotifications: async () => {
     try {
       const res = await request<AppNotification[]>('/notifications');
-      return Array.isArray(res) ? res : mockNotifications;
+      return Array.isArray(res) && res.length > 0 ? res : mockNotifications;
     } catch {
       return mockNotifications;
     }
@@ -502,12 +787,16 @@ export const api = {
   getUsers: async () => {
     try {
       const res = await request<User[]>('/users');
-      return Array.isArray(res) ? res : [mockUser];
+      return Array.isArray(res) && res.length > 0 ? res : [
+        mockUser,
+        { id: 'u-002', name: 'Gunaseelan', email: 'guna@tenderflow.com', role: 'Project Manager', department: 'Operations & Execution', phone: '+91 98765 43210', status: 'Active', createdAt: new Date().toISOString() },
+        { id: 'u-003', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() }
+      ];
     } catch (e) {
       return [
         mockUser,
-        { id: 'u-002', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() },
-        { id: 'u-003', name: 'Priya Sundaram', email: 'pm@tenderflow.com', role: 'Project Manager', department: 'Operations & Execution', phone: '+91 98765 43212', status: 'Active', createdAt: new Date().toISOString() }
+        { id: 'u-002', name: 'Gunaseelan', email: 'guna@tenderflow.com', role: 'Project Manager', department: 'Operations & Execution', phone: '+91 98765 43210', status: 'Active', createdAt: new Date().toISOString() },
+        { id: 'u-003', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() }
       ];
     }
   },
@@ -576,15 +865,19 @@ export const api = {
     try {
       return await request<any>('/settings/query', { method: 'POST', body: JSON.stringify({ query }) });
     } catch {
-      return [{ result: 'Demo database console. Connect local MySQL for live queries.' }];
+      return [
+        { table_name: 'User', records: 5, status: 'Active' },
+        { table_name: 'Tender', records: 12, status: 'Active' },
+        { table_name: 'Project', records: 5, status: 'Active' }
+      ];
     }
   },
   getAuditLogs: async () => {
     try {
       const res = await request<AuditLog[]>('/audit-logs');
-      return Array.isArray(res) ? res : [];
+      return Array.isArray(res) && res.length > 0 ? res : mockAuditLogs;
     } catch {
-      return [];
+      return mockAuditLogs;
     }
   },
 
