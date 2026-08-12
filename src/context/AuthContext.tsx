@@ -16,46 +16,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('tf_jwt_token'));
-  const [loading, setLoading] = useState<boolean>(true);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    async function loadUser() {
-      if (token) {
-        try {
-          const profile = await api.getMe();
+    // Only attempt profile fetch if token is explicitly present from current session
+    if (token) {
+      api.getMe()
+        .then(profile => {
           if (profile && profile.id && profile.name && profile.role) {
             setUser(profile);
-          } else {
-            setUser({
-              id: 'u-001',
-              name: 'Super Admin',
-              email: 'admin@tenderflow.com',
-              role: 'Super Admin',
-              department: 'Management',
-              phone: '+91 98765 43210',
-              status: 'Active',
-              createdAt: new Date().toISOString()
-            });
           }
-        } catch (err) {
-          setUser({
-            id: 'u-001',
-            name: 'Super Admin',
-            email: 'admin@tenderflow.com',
-            role: 'Super Admin',
-            department: 'Management',
-            phone: '+91 98765 43210',
-            status: 'Active',
-            createdAt: new Date().toISOString()
-          });
-        }
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
+        })
+        .catch(() => {});
     }
-    loadUser();
   }, [token]);
 
   const login = async (emailInput: string, passwordInput: string) => {
