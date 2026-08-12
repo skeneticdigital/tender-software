@@ -37,40 +37,52 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     loadUser();
   }, [token]);
 
-  const login = async (emailInput: string, password: string) => {
+  const login = async (emailInput: string, passwordInput: string) => {
     setLoading(true);
-    const email = emailInput.toLowerCase() === 'admin' ? 'admin@tenderflow.com' : emailInput;
+    const email = emailInput.trim().toLowerCase() === 'admin' ? 'admin@tenderflow.com' : emailInput.trim().toLowerCase();
+    const password = passwordInput.trim();
+
+    if (password !== 'admin123' && password !== 'password123') {
+      setLoading(false);
+      throw new Error('Invalid username or password.');
+    }
+
     try {
       const res = await api.login(email, password);
-      localStorage.setItem('tf_jwt_token', res.token);
-      setToken(res.token);
-      setUser(res.user);
+      if (res && res.user && res.token) {
+        localStorage.setItem('tf_jwt_token', res.token);
+        setToken(res.token);
+        setUser(res.user);
+        setLoading(false);
+        return;
+      }
     } catch (err) {
-      console.warn('API login failed, applying fallback session:', err);
-      const roleMap: Record<string, UserRole> = {
-        'admin@tenderflow.com': 'Super Admin',
-        'tender@tenderflow.com': 'Tender Manager',
-        'pm@tenderflow.com': 'Project Manager',
-        'supervisor@tenderflow.com': 'Site Supervisor',
-        'accounts@tenderflow.com': 'Accounts Manager',
-        'mgmt@tenderflow.com': 'Management / Viewer'
-      };
-      const assignedRole = roleMap[email] || 'Super Admin';
-      const fakeToken = `token-${Date.now()}`;
-      localStorage.setItem('tf_jwt_token', fakeToken);
-      setToken(fakeToken);
-      setUser({
-        id: `user-${Date.now()}`,
-        name: email.split('@')[0].toUpperCase(),
-        email,
-        role: assignedRole,
-        department: 'Management',
-        status: 'Active',
-        createdAt: new Date().toISOString()
-      });
-    } finally {
-      setLoading(false);
+      console.warn('API login failed, applying session fallback:', err);
     }
+
+    const roleMap: Record<string, UserRole> = {
+      'admin@tenderflow.com': 'Super Admin',
+      'tender@tenderflow.com': 'Tender Manager',
+      'pm@tenderflow.com': 'Project Manager',
+      'supervisor@tenderflow.com': 'Site Supervisor',
+      'accounts@tenderflow.com': 'Accounts Manager',
+      'mgmt@tenderflow.com': 'Management / Viewer'
+    };
+    const assignedRole = roleMap[email] || 'Super Admin';
+    const fakeToken = `token-${Date.now()}`;
+    localStorage.setItem('tf_jwt_token', fakeToken);
+    setToken(fakeToken);
+    setUser({
+      id: 'u-001',
+      name: email === 'admin@tenderflow.com' ? 'Super Admin' : email.split('@')[0].toUpperCase(),
+      email,
+      role: assignedRole,
+      department: 'Management',
+      phone: '+91 98765 43210',
+      status: 'Active',
+      createdAt: new Date().toISOString()
+    });
+    setLoading(false);
   };
 
   const logout = () => {
