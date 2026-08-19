@@ -205,9 +205,7 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete tender "${t.name}"?`)) {
-                              setTenders(prev => prev.filter(x => x.id !== t.id));
-                            }
+                            setTenders(prev => prev.filter(x => x.id !== t.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
                           title="Delete Tender"

@@ -39,7 +39,7 @@ export const RetentionDashboard: React.FC = () => {
       });
       fetchRetentions();
     } catch (err: any) {
-      alert(err.message || 'Error updating retention');
+      console.error(err);
     }
   };
 
@@ -123,9 +123,7 @@ export const RetentionDashboard: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete retention record for bill "${r.billNumber || r.billNo}"?`)) {
-                              setRetentions(prev => prev.filter(x => x.id !== r.id));
-                            }
+                            setRetentions(prev => prev.filter(x => x.id !== r.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Retention Record"

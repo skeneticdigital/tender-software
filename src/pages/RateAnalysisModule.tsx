@@ -213,9 +213,7 @@ export const RateAnalysisModule: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete rate item "${item.itemCode}"?`)) {
-                              setItems(items.filter(x => x.id !== item.id));
-                            }
+                            setItems(items.filter(x => x.id !== item.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Rate Item"

@@ -65,7 +65,7 @@ export const TenderDetailsModal: React.FC<TenderDetailsModalProps> = ({
       setEditForm(updated);
       onRefresh();
     } catch (err: any) {
-      alert(err.message || 'Error updating status');
+      console.error(err);
     }
   };
 
@@ -91,7 +91,7 @@ export const TenderDetailsModal: React.FC<TenderDetailsModalProps> = ({
       setIsEditing(false);
       onRefresh();
     } catch (err: any) {
-      alert(err.message || 'Failed to update tender details');
+      console.error(err);
     }
   };
 

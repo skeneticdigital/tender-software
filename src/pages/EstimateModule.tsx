@@ -376,10 +376,8 @@ export const EstimateModule: React.FC = () => {
                             </button>
                             <button
                               onClick={() => {
-                                if (confirm(`Delete BOQ Item "${item.code}"?`)) {
-                                  selectedEstimate.items = selectedEstimate.items.filter(x => x.id !== item.id);
-                                  setSelectedEstimate({ ...selectedEstimate });
-                                }
+                                selectedEstimate.items = selectedEstimate.items.filter(x => x.id !== item.id);
+                                setSelectedEstimate({ ...selectedEstimate });
                               }}
                               className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                               title="Delete Item"

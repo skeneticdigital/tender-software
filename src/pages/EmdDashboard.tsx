@@ -53,7 +53,7 @@ export const EmdDashboard: React.FC = () => {
       setSelectedEmd(null);
       fetchData();
     } catch (err: any) {
-      alert(err.message || 'Error updating EMD');
+      console.error(err);
     }
   };
 
@@ -210,9 +210,7 @@ export const EmdDashboard: React.FC = () => {
                           </button>
                           <button
                             onClick={() => {
-                              if (confirm(`Are you sure you want to delete EMD transaction "${e.refNumber}"?`)) {
-                                setEmds(prev => prev.filter(x => x.id !== e.id));
-                              }
+                              setEmds(prev => prev.filter(x => x.id !== e.id));
                             }}
                             className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                             title="Delete EMD"
@@ -274,9 +272,7 @@ export const EmdDashboard: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete Security Deposit "${s.refNumber}"?`)) {
-                              setSds(prev => prev.filter(x => x.id !== s.id));
-                            }
+                            setSds(prev => prev.filter(x => x.id !== s.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Security Deposit"

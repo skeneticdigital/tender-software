@@ -78,7 +78,7 @@ export const MaterialMaster: React.FC = () => {
       }
       fetchMaterials();
     } catch (err: any) {
-      alert(err.message || 'Error saving material');
+      console.error(err);
     }
   };
 
@@ -321,9 +321,7 @@ export const MaterialMaster: React.FC = () => {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm(`Are you sure you want to delete material "${m.name}"?`)) {
-                                setMaterials(prev => prev.filter(x => x.id !== m.id));
-                              }
+                              setMaterials(prev => prev.filter(x => x.id !== m.id));
                             }}
                             className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
                             title="Delete Material"

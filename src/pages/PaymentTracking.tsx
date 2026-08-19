@@ -186,9 +186,7 @@ export const PaymentTracking: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Delete payment record for bill "${p.billNumber}"?`)) {
-                              setPayments(payments.filter(x => x.id !== p.id));
-                            }
+                            setPayments(payments.filter(x => x.id !== p.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Payment"

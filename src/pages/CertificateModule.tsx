@@ -203,9 +203,7 @@ export const CertificateModule: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Delete certificate "${cert.certificateNumber}"?`)) {
-                              setCerts(certs.filter(x => x.id !== cert.id));
-                            }
+                            setCerts(certs.filter(x => x.id !== cert.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Certificate"

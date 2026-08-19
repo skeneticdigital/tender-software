@@ -41,7 +41,7 @@ export const SettingsPage: React.FC = () => {
       setSavedMessage('System settings & contracting configuration successfully saved!');
       setTimeout(() => setSavedMessage(''), 3500);
     } catch (err: any) {
-      alert(err.message || 'Error updating settings');
+      console.error(err);
     }
   };
 

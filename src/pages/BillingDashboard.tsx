@@ -369,9 +369,7 @@ startxref
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete bill "${b.billNumber || b.billNo}"?`)) {
-                              setBills(prev => prev.filter(x => x.id !== b.id));
-                            }
+                            setBills(prev => prev.filter(x => x.id !== b.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
                           title="Delete Bill"

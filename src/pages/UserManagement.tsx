@@ -60,7 +60,7 @@ export const UserManagement: React.FC = () => {
       }
       setIsOpen(false);
     } catch (err: any) {
-      alert(err.message || 'Error saving user');
+      console.error(err);
     }
   };
 
@@ -106,7 +106,6 @@ export const UserManagement: React.FC = () => {
               checked={emailAlerts}
               onChange={(e) => {
                 setEmailAlerts(e.target.checked);
-                if (e.target.checked) alert("Admin email notifications enabled for system alerts.");
               }}
               className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" 
             />
@@ -159,8 +158,7 @@ export const UserManagement: React.FC = () => {
                               setUsers(prev => prev.map(x => x.id === u.id ? { ...x, status: newStatus } : x));
                               await api.updateUser(u.id, { status: newStatus });
                             } catch (err: any) {
-                              alert(err.message || 'Error updating status');
-                              fetchUsers();
+                              console.error(err);
                             }
                           }}
                           className="text-[11px] font-bold text-slate-500 hover:text-slate-800 transition-colors px-2 py-1 rounded bg-slate-100"
@@ -176,13 +174,11 @@ export const UserManagement: React.FC = () => {
                         </button>
                         <button
                           onClick={async () => {
-                            if (confirm(`Are you sure you want to delete user persona "${u.name}" (${u.username})?`)) {
-                              try {
-                                await api.deleteUser(u.id);
-                                fetchUsers();
-                              } catch (err: any) {
-                                setUsers(prev => prev.filter(x => x.id !== u.id));
-                              }
+                            try {
+                              setUsers(prev => prev.filter(x => x.id !== u.id));
+                              await api.deleteUser(u.id);
+                            } catch (err: any) {
+                              setUsers(prev => prev.filter(x => x.id !== u.id));
                             }
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"

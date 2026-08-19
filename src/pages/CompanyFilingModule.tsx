@@ -234,9 +234,7 @@ export const CompanyFilingModule: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete archive document "${d.documentTitle}"?`)) {
-                              setDocs(docs.filter(x => x.id !== d.id));
-                            }
+                            setDocs(docs.filter(x => x.id !== d.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Document"

@@ -174,7 +174,7 @@ export const InventoryDashboard: React.FC = () => {
       setIsDispatchOpen(false);
       fetchData();
     } catch (err: any) {
-      alert(err.message || 'Dispatch failed');
+      console.error(err);
     }
   };
 
@@ -185,7 +185,7 @@ export const InventoryDashboard: React.FC = () => {
       setIsConsumeOpen(false);
       fetchData();
     } catch (err: any) {
-      alert(err.message || 'Consumption logging failed');
+      console.error(err);
     }
   };
 
@@ -283,9 +283,7 @@ export const InventoryDashboard: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete material "${item.materialName || item.name}"?`)) {
-                              setInventory(prev => prev.filter(x => x.id !== item.id));
-                            }
+                            setInventory(prev => prev.filter(x => x.id !== item.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors border border-rose-100"
                           title="Delete Material"

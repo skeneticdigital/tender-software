@@ -211,9 +211,7 @@ export const WorkOrderModule: React.FC = () => {
                         </button>
                         <button
                           onClick={() => {
-                            if (confirm(`Are you sure you want to delete work order "${wo.workOrderNumber}"?`)) {
-                              setWorkOrders(workOrders.filter(x => x.id !== wo.id));
-                            }
+                            setWorkOrders(workOrders.filter(x => x.id !== wo.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                           title="Delete Work Order"

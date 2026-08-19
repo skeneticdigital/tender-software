@@ -262,9 +262,7 @@ export const MachineryModule: React.FC = () => {
                           </button>
                           <button
                             onClick={() => {
-                              if (confirm(`Delete machinery "${mac.name}"?`)) {
-                                setMachinery(machinery.filter(x => x.id !== mac.id));
-                              }
+                              setMachinery(machinery.filter(x => x.id !== mac.id));
                             }}
                             className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                             title="Delete Machinery"
@@ -315,9 +313,7 @@ export const MachineryModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-center">
                       <button
                         onClick={() => {
-                          if (confirm(`Delete machinery log entry for "${log.machineName}" on ${log.date}?`)) {
-                            setLogs(logs.filter(x => x.id !== log.id));
-                          }
+                          setLogs(logs.filter(x => x.id !== log.id));
                         }}
                         className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                         title="Delete Log Entry"

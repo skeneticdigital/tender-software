@@ -237,9 +237,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`Are you sure you want to delete project "${p.projectName}"?`)) {
-                              setProjects(prev => prev.filter(x => x.id !== p.id));
-                            }
+                            setProjects(prev => prev.filter(x => x.id !== p.id));
                           }}
                           className="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors"
                           title="Delete Project"

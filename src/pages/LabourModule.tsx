@@ -238,9 +238,7 @@ export const LabourModule: React.FC = () => {
                           </button>
                           <button
                             onClick={() => {
-                              if (confirm(`Delete worker "${w.workerName}"?`)) {
-                                setWorkers(workers.filter(x => x.id !== w.id));
-                              }
+                              setWorkers(workers.filter(x => x.id !== w.id));
                             }}
                             className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                             title="Delete Worker"
@@ -288,9 +286,7 @@ export const LabourModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-center">
                       <button
                         onClick={() => {
-                          if (confirm(`Delete wage disbursement entry for date ${d.date}?`)) {
-                            setDisbursements(disbursements.filter(x => x.id !== d.id));
-                          }
+                          setDisbursements(disbursements.filter(x => x.id !== d.id));
                         }}
                         className="p-1.5 hover:bg-rose-50 text-rose-600 rounded transition-colors"
                         title="Delete Disbursement"
