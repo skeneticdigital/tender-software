@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, Search, Plus, AlertTriangle, Layers, Pencil, Trash2 } from 'lucide-react';
+import { Package, Search, Plus, AlertTriangle, Layers, Pencil, Trash2, FileSpreadsheet, PlusCircle, Save } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import { Material } from '../types';
@@ -17,6 +17,25 @@ export const MaterialMaster: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
+
+  // Bulk Add Modal State
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
+  const [bulkTab, setBulkTab] = useState<'table' | 'csv'>('table');
+  const [bulkRows, setBulkRows] = useState<Array<{
+    materialCode: string;
+    name: string;
+    category: string;
+    unit: string;
+    unitRate: number;
+    supplierName: string;
+    currentStock: number;
+    reorderLevel: number;
+  }>>([
+    { materialCode: 'MAT-SND-01', name: 'Manufactured Sand (M-Sand)', category: 'Aggregates & Sand', unit: 'Cu.M', unitRate: 1450, supplierName: 'Vaigai Quarry Ops', currentStock: 450, reorderLevel: 150 },
+    { materialCode: 'MAT-JEL-20', name: '20mm Blue Metal Jelly Aggregate', category: 'Aggregates & Sand', unit: 'Cu.M', unitRate: 1250, supplierName: 'Vaigai Quarry Ops', currentStock: 300, reorderLevel: 100 },
+    { materialCode: 'MAT-STL-12', name: 'TMT Steel Bars 12mm Fe550D', category: 'Steel & Metals', unit: 'MT', unitRate: 64500, supplierName: 'Tata Tiscon Dealer', currentStock: 35, reorderLevel: 15 }
+  ]);
+  const [csvText, setCsvText] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -80,6 +99,94 @@ export const MaterialMaster: React.FC = () => {
     setIsEditOpen(true);
   };
 
+  // Bulk Add Handlers
+  const handleAddBulkRow = () => {
+    setBulkRows([
+      ...bulkRows,
+      {
+        materialCode: `MAT-ITEM-${Math.floor(Math.random() * 899 + 100)}`,
+        name: '',
+        category: 'Construction Materials',
+        unit: 'Cu.M',
+        unitRate: 1000,
+        supplierName: 'Local Supplier',
+        currentStock: 100,
+        reorderLevel: 50
+      }
+    ]);
+  };
+
+  const handleUpdateBulkRow = (index: number, field: string, val: any) => {
+    const updated = [...bulkRows];
+    updated[index] = { ...updated[index], [field]: val };
+    setBulkRows(updated);
+  };
+
+  const handleRemoveBulkRow = (index: number) => {
+    setBulkRows(bulkRows.filter((_, i) => i !== index));
+  };
+
+  const handleLoadStandardPreset = () => {
+    setBulkRows([
+      { materialCode: 'MAT-SND-01', name: 'Manufactured Sand (M-Sand)', category: 'Aggregates & Sand', unit: 'Cu.M', unitRate: 1450, supplierName: 'Vaigai Quarry Ops', currentStock: 450, reorderLevel: 150 },
+      { materialCode: 'MAT-JEL-20', name: '20mm Blue Metal Jelly Aggregate', category: 'Aggregates & Sand', unit: 'Cu.M', unitRate: 1250, supplierName: 'Vaigai Quarry Ops', currentStock: 300, reorderLevel: 100 },
+      { materialCode: 'MAT-STL-12', name: 'TMT Steel Bars 12mm Fe550D', category: 'Steel & Metals', unit: 'MT', unitRate: 64500, supplierName: 'Tata Tiscon Dealer', currentStock: 35, reorderLevel: 15 },
+      { materialCode: 'MAT-BRK-RED', name: 'Standard First Class Red Clay Bricks', category: 'Bricks & Blocks', unit: 'Nos', unitRate: 11, supplierName: 'Madurai Chamber Kilns', currentStock: 25000, reorderLevel: 5000 },
+      { materialCode: 'MAT-ADM-WP', name: 'Integral Waterproofing Concrete Admixture', category: 'Cement & Concrete', unit: 'Litres', unitRate: 240, supplierName: 'Fosroc Chemicals', currentStock: 500, reorderLevel: 100 }
+    ]);
+  };
+
+  const handleSaveBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    let newItems: Material[] = [];
+
+    if (bulkTab === 'table') {
+      newItems = bulkRows.map((r, idx) => ({
+        id: `mat-bulk-${Date.now()}-${idx}`,
+        materialCode: r.materialCode || `MAT-${Date.now()}-${idx}`,
+        name: r.name || 'Bulk Material Item',
+        category: r.category || 'Construction Materials',
+        unit: r.unit || 'Bags',
+        specification: 'Standard Construction Spec',
+        minStockLevel: Math.round(r.reorderLevel / 2),
+        reorderLevel: Number(r.reorderLevel) || 50,
+        currentStock: Number(r.currentStock) || 0,
+        supplierName: r.supplierName || 'Primary Vendor',
+        unitRate: Number(r.unitRate) || 0,
+        status: Number(r.currentStock) < Number(r.reorderLevel) ? 'Low Stock Alert' : 'Active',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }));
+    } else {
+      // CSV parse
+      const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      newItems = lines.map((line, idx) => {
+        const parts = line.split(',').map(p => p.trim());
+        return {
+          id: `mat-csv-${Date.now()}-${idx}`,
+          materialCode: parts[0] || `MAT-CSV-${idx + 1}`,
+          name: parts[1] || 'CSV Material Item',
+          category: parts[2] || 'Construction Materials',
+          unit: parts[3] || 'Bags',
+          specification: 'CSV Import Spec',
+          minStockLevel: 50,
+          reorderLevel: Number(parts[7]) || 100,
+          currentStock: Number(parts[6]) || 500,
+          supplierName: parts[5] || 'CSV Vendor',
+          unitRate: Number(parts[4]) || 500,
+          status: 'Active',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      });
+    }
+
+    if (newItems.length > 0) {
+      setMaterials([...newItems, ...materials]);
+    }
+    setIsBulkOpen(false);
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
       {/* Header */}
@@ -88,27 +195,36 @@ export const MaterialMaster: React.FC = () => {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Material Master Catalog</h1>
           <p className="text-xs text-slate-500 mt-1">Manage construction materials master list, unit rates, standard specifications & reorder thresholds</p>
         </div>
-        <button
-          onClick={() => {
-            setForm({
-              name: '',
-              category: 'Cement & Concrete',
-              unit: 'Bags',
-              specification: 'OPC 53 Grade',
-              minStockLevel: 100,
-              reorderLevel: 250,
-              currentStock: 1000,
-              supplierName: 'UltraTech Cement Ltd',
-              unitRate: 380,
-              remarks: ''
-            });
-            setIsModalOpen(true);
-          }}
-          className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Material Item
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsBulkOpen(true)}
+            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-2"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Bulk Add Materials
+          </button>
+          <button
+            onClick={() => {
+              setForm({
+                name: '',
+                category: 'Cement & Concrete',
+                unit: 'Bags',
+                specification: 'OPC 53 Grade',
+                minStockLevel: 100,
+                reorderLevel: 250,
+                currentStock: 1000,
+                supplierName: 'UltraTech Cement Ltd',
+                unitRate: 380,
+                remarks: ''
+              });
+              setIsModalOpen(true);
+            }}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Material Item
+          </button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -156,7 +272,9 @@ export const MaterialMaster: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">Loading catalog...</td></tr>
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Loading catalog...</td></tr>
+              ) : materials.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">No material catalog items found.</td></tr>
               ) : (
                 materials.map((m) => {
                   const isLow = m.currentStock < m.reorderLevel;
@@ -164,7 +282,7 @@ export const MaterialMaster: React.FC = () => {
                     <tr key={m.id} className="hover:bg-slate-50/80 transition-colors group cursor-pointer" onClick={() => openEditModal(m)}>
                       <td className="px-4 py-3.5">
                         <div className="font-bold text-slate-900">{m.name}</div>
-                        <div className="text-[10px] text-slate-400">{m.materialCode} | {m.specification}</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{m.materialCode} | {m.specification}</div>
                       </td>
 
                       <td className="px-4 py-3.5 font-semibold text-slate-700">{m.category}</td>
@@ -223,7 +341,7 @@ export const MaterialMaster: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal Form */}
+      {/* Modal 1: Single Material Add & Edit */}
       {(isModalOpen || isEditOpen) && (
         <Modal
           isOpen={isModalOpen || isEditOpen}
@@ -329,6 +447,194 @@ export const MaterialMaster: React.FC = () => {
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs"
               >
                 {isEditOpen ? "Save Changes" : "Save Material Item"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Modal 2: Bulk Add Materials Modal */}
+      {isBulkOpen && (
+        <Modal
+          isOpen={isBulkOpen}
+          onClose={() => setIsBulkOpen(false)}
+          title="Bulk Add Construction Materials"
+          subtitle="Add multiple material catalog items simultaneously using multi-row entry or CSV paste"
+          maxWidth="4xl"
+        >
+          <form onSubmit={handleSaveBulkSubmit} className="space-y-4 text-xs">
+            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-200">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkTab('table')}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                    bulkTab === 'table' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Multi-Row Form ({bulkRows.length} Items)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkTab('csv')}
+                  className={`px-3 py-1.5 rounded-lg font-bold text-xs transition-all ${
+                    bulkTab === 'csv' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  CSV / Text Import
+                </button>
+              </div>
+
+              {bulkTab === 'table' && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleLoadStandardPreset}
+                    className="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg font-bold"
+                  >
+                    ⚡ Load 5 Standard Construction Materials Preset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAddBulkRow}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold flex items-center gap-1"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Row
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {bulkTab === 'table' ? (
+              <div className="max-h-96 overflow-y-auto border border-slate-200 rounded-xl">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 border-b font-bold text-slate-600 uppercase text-[10px]">
+                    <tr>
+                      <th className="p-2.5">Code *</th>
+                      <th className="p-2.5">Material Name *</th>
+                      <th className="p-2.5">Category *</th>
+                      <th className="p-2.5">Unit</th>
+                      <th className="p-2.5">Rate (₹)</th>
+                      <th className="p-2.5">Supplier</th>
+                      <th className="p-2.5">Stock</th>
+                      <th className="p-2.5">Reorder</th>
+                      <th className="p-2.5 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {bulkRows.map((row, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            required
+                            value={row.materialCode}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'materialCode', e.target.value)}
+                            className="w-24 px-2 py-1 bg-white border border-slate-300 rounded font-mono font-bold"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            required
+                            value={row.name}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'name', e.target.value)}
+                            className="w-48 px-2 py-1 bg-white border border-slate-300 rounded font-semibold"
+                            placeholder="e.g. M-Sand"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            required
+                            value={row.category}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'category', e.target.value)}
+                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            required
+                            value={row.unit}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'unit', e.target.value)}
+                            className="w-16 px-2 py-1 bg-white border border-slate-300 rounded font-bold"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            required
+                            value={row.unitRate}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'unitRate', parseFloat(e.target.value) || 0)}
+                            className="w-20 px-2 py-1 bg-white border border-slate-300 rounded font-bold text-blue-700"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="text"
+                            value={row.supplierName}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'supplierName', e.target.value)}
+                            className="w-32 px-2 py-1 bg-white border border-slate-300 rounded"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            value={row.currentStock}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'currentStock', parseFloat(e.target.value) || 0)}
+                            className="w-20 px-2 py-1 bg-white border border-slate-300 rounded font-bold text-slate-900"
+                          />
+                        </td>
+                        <td className="p-2">
+                          <input
+                            type="number"
+                            value={row.reorderLevel}
+                            onChange={(e) => handleUpdateBulkRow(idx, 'reorderLevel', parseFloat(e.target.value) || 0)}
+                            className="w-20 px-2 py-1 bg-white border border-slate-300 rounded text-slate-600"
+                          />
+                        </td>
+                        <td className="p-2 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBulkRow(idx)}
+                            className="p-1 hover:bg-rose-50 text-rose-600 rounded"
+                            title="Remove row"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <label className="block font-bold text-slate-700">Paste Comma-Separated CSV Data (Code, Name, Category, Unit, Rate, Supplier, Stock, Reorder)</label>
+                <textarea
+                  rows={8}
+                  value={csvText}
+                  onChange={(e) => setCsvText(e.target.value)}
+                  placeholder={`MAT-SND-01, Manufactured Sand (M-Sand), Aggregates & Sand, Cu.M, 1450, Vaigai Quarry, 450, 150\nMAT-JEL-20, 20mm Blue Metal Jelly, Aggregates & Sand, Cu.M, 1250, Vaigai Quarry, 300, 100`}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs"
+                />
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <button
+                type="button"
+                onClick={() => setIsBulkOpen(false)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md flex items-center gap-1.5"
+              >
+                <Save className="w-4 h-4" /> Save All Bulk Materials
               </button>
             </div>
           </form>
