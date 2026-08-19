@@ -384,6 +384,8 @@ const mockNotifications: AppNotification[] = [
     message: 'NHAI Madurai Highway tender submission closes in 2 days.',
     priority: 'High',
     isRead: false,
+    relatedModule: 'tenders',
+    relatedId: 't-001',
     createdAt: new Date().toISOString()
   },
   {
@@ -392,7 +394,19 @@ const mockNotifications: AppNotification[] = [
     message: 'TWAD EMD amount ₹8.50 Lakhs refund follow-up due.',
     priority: 'Medium',
     isRead: false,
+    relatedModule: 'emd',
+    relatedId: 'emd-002',
     createdAt: new Date(Date.now() - 86400000).toISOString()
+  },
+  {
+    id: 'n-003',
+    title: 'Client Bill Payment Milestone',
+    message: 'RA-01/2026/MAD running bill payment of ₹1.66 Cr due from NHAI.',
+    priority: 'High',
+    isRead: false,
+    relatedModule: 'billing',
+    relatedId: 'b-001',
+    createdAt: new Date(Date.now() - 172800000).toISOString()
   }
 ];
 
@@ -415,6 +429,12 @@ const mockAuditLogs: AuditLog[] = [
     details: 'Submitted Tender Quote NHAI/2026/TN-042 (Value: ₹14.20 Cr)',
     timestamp: new Date(Date.now() - 3600000).toISOString()
   }
+];
+
+const mockUsersList: User[] = [
+  mockUser,
+  { id: 'u-002', name: 'Gunaseelan', email: 'guna@tenderflow.com', role: 'Project Manager', department: 'Operations & Execution', phone: '+91 98765 43210', status: 'Active', createdAt: new Date().toISOString() },
+  { id: 'u-003', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() }
 ];
 
 export const api = {
@@ -510,7 +530,8 @@ export const api = {
     try {
       return await request<any>(`/tenders/${id}`);
     } catch {
-      return { ...mockTenders[0], id };
+      const found = mockTenders.find(t => t.id === id);
+      return found ? { ...found } : { ...mockTenders[0], id };
     }
   },
   getTenderAnalytics: async () => {
@@ -524,13 +545,20 @@ export const api = {
     try {
       return await request<Tender>('/tenders', { method: 'POST', body: JSON.stringify(data) });
     } catch {
-      return { ...mockTenders[0], ...data, id: `t-${Date.now()}` } as Tender;
+      const newTender = { ...mockTenders[0], ...data, id: `t-${Date.now()}` } as Tender;
+      mockTenders.unshift(newTender);
+      return newTender;
     }
   },
   updateTender: async (id: string, data: Partial<Tender>) => {
     try {
       return await request<Tender>(`/tenders/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     } catch {
+      const idx = mockTenders.findIndex(t => t.id === id);
+      if (idx !== -1) {
+        mockTenders[idx] = { ...mockTenders[idx], ...data };
+        return mockTenders[idx];
+      }
       return { ...mockTenders[0], ...data, id } as Tender;
     }
   },
@@ -799,24 +827,16 @@ export const api = {
   getUsers: async () => {
     try {
       const res = await request<User[]>('/users');
-      return Array.isArray(res) && res.length > 0 ? res : [
-        mockUser,
-        { id: 'u-002', name: 'Gunaseelan', email: 'guna@tenderflow.com', role: 'Project Manager', department: 'Operations & Execution', phone: '+91 98765 43210', status: 'Active', createdAt: new Date().toISOString() },
-        { id: 'u-003', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() }
-      ];
+      return Array.isArray(res) && res.length > 0 ? res : mockUsersList;
     } catch (e) {
-      return [
-        mockUser,
-        { id: 'u-002', name: 'Gunaseelan', email: 'guna@tenderflow.com', role: 'Project Manager', department: 'Operations & Execution', phone: '+91 98765 43210', status: 'Active', createdAt: new Date().toISOString() },
-        { id: 'u-003', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() }
-      ];
+      return mockUsersList;
     }
   },
   createUser: async (data: any) => {
     try {
       return await request<User>('/users', { method: 'POST', body: JSON.stringify(data) });
     } catch (e) {
-      return {
+      const newUser: User = {
         id: `u-${Date.now()}`,
         name: data.name,
         email: data.email,
@@ -827,29 +847,28 @@ export const api = {
         accessibleModules: data.accessibleModules || [],
         createdAt: new Date().toISOString()
       };
+      mockUsersList.push(newUser);
+      return newUser;
     }
   },
   updateUser: async (id: string, data: any) => {
     try {
       return await request<User>(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     } catch (e) {
-      return {
-        id,
-        name: data.name || 'User',
-        email: data.email || 'user@tenderflow.com',
-        role: data.role || 'Super Admin',
-        department: data.department || 'Management',
-        phone: data.phone || '',
-        status: data.status || 'Active',
-        accessibleModules: data.accessibleModules || [],
-        createdAt: new Date().toISOString()
-      };
+      const idx = mockUsersList.findIndex(u => u.id === id);
+      if (idx !== -1) {
+        mockUsersList[idx] = { ...mockUsersList[idx], ...data };
+        return mockUsersList[idx];
+      }
+      return { id, name: data.name || 'User', email: 'user@tenderflow.com', role: 'Admin', department: 'Management', status: data.status || 'Active', createdAt: new Date().toISOString() };
     }
   },
   deleteUser: async (id: string) => {
     try {
       return await request<any>(`/users/${id}`, { method: 'DELETE' });
-    } catch {
+    } catch (e) {
+      const idx = mockUsersList.findIndex(u => u.id === id);
+      if (idx !== -1) mockUsersList.splice(idx, 1);
       return { success: true };
     }
   },

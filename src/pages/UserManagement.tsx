@@ -156,10 +156,11 @@ export const UserManagement: React.FC = () => {
                           onClick={async () => {
                             const newStatus = u.status === 'Active' ? 'Inactive' : 'Active';
                             try {
+                              setUsers(prev => prev.map(x => x.id === u.id ? { ...x, status: newStatus } : x));
                               await api.updateUser(u.id, { status: newStatus });
-                              fetchUsers();
                             } catch (err: any) {
                               alert(err.message || 'Error updating status');
+                              fetchUsers();
                             }
                           }}
                           className="text-[11px] font-bold text-slate-500 hover:text-slate-800 transition-colors px-2 py-1 rounded bg-slate-100"

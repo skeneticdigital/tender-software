@@ -7,9 +7,11 @@ import { api } from '../../lib/api';
 interface HeaderProps {
   onSearchChange?: (q: string) => void;
   onNavigateModule?: (module: string, id?: string) => void;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onSearchChange, onNavigateModule }) => {
+export const Header: React.FC<HeaderProps> = ({ onSearchChange, onNavigateModule, activeTab, setActiveTab }) => {
   const { user, logout, switchRoleDemo } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -58,8 +60,16 @@ export const Header: React.FC<HeaderProps> = ({ onSearchChange, onNavigateModule
 
   return (
     <header className="sticky top-0 z-30 h-16 bg-slate-900 border-b border-slate-800 text-white flex items-center justify-between px-4 lg:px-6 shadow-sm">
+      {/* Invisible Backdrops for Outside Click to Close */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+      )}
+      {showRoleSelector && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowRoleSelector(false)} />
+      )}
+
       {/* Search Input */}
-      <div className="flex items-center gap-3 flex-1 max-w-md">
+      <div className="flex items-center gap-3 flex-1 max-w-md z-50">
         <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -73,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({ onSearchChange, onNavigateModule
       </div>
 
       {/* Right Action Tools */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 z-50">
         {/* Quick Role Switcher */}
         <div className="relative">
           <button
@@ -154,9 +164,12 @@ export const Header: React.FC<HeaderProps> = ({ onSearchChange, onNavigateModule
                       onClick={async () => {
                         await api.markNotificationRead(n.id);
                         setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, isRead: true } : x));
-                        if (onNavigateModule && n.relatedModule) {
-                          onNavigateModule(n.relatedModule, n.relatedId);
-                          setShowNotifications(false);
+                        setShowNotifications(false);
+                        const targetModule = n.relatedModule || 'tenders';
+                        if (onNavigateModule) {
+                          onNavigateModule(targetModule, n.relatedId);
+                        } else if (setActiveTab) {
+                          setActiveTab(targetModule);
                         }
                       }}
                       className={`p-3.5 text-xs cursor-pointer hover:bg-slate-800/60 transition-colors ${
