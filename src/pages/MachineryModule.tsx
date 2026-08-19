@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Plus, Search, Pencil, Trash2, Fuel, Clock, Gauge, IndianRupee, Wrench } from 'lucide-react';
+import { Truck, Plus, Search, Pencil, Trash2, Fuel, Clock, Gauge, Save } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { MachineryItem, MachineryLog } from '../types';
 import { Badge } from '../components/ui/Badge';
@@ -11,6 +11,21 @@ export const MachineryModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'fleet' | 'logs'>('fleet');
   const [search, setSearch] = useState('');
+
+  // Fleet Machinery Modal (Add & Edit)
+  const [isMacModalOpen, setIsMacModalOpen] = useState(false);
+  const [editingMac, setEditingMac] = useState<MachineryItem | null>(null);
+  const [macForm, setMacForm] = useState<Partial<MachineryItem>>({
+    machineCode: 'MCH-EXC-01',
+    name: '',
+    category: 'Earthmoving',
+    ownership: 'Owned',
+    hourlyOperatorRate: 320,
+    dieselConsumptionLitresPerHr: 14.5,
+    totalOperatingHours: 450,
+    currentSite: 'Madurai Ring Road Site #1',
+    status: 'Active Operating'
+  });
 
   // Log Modal
   const [isLogOpen, setIsLogOpen] = useState(false);
@@ -45,6 +60,65 @@ export const MachineryModule: React.FC = () => {
     }
   };
 
+  const handleOpenAddMachine = () => {
+    setEditingMac(null);
+    setMacForm({
+      machineCode: `MCH-${Math.floor(Math.random() * 900 + 100)}`,
+      name: '',
+      category: 'Earthmoving',
+      ownership: 'Owned',
+      hourlyOperatorRate: 320,
+      dieselConsumptionLitresPerHr: 14.5,
+      totalOperatingHours: 450,
+      currentSite: 'Madurai Ring Road Site #1',
+      status: 'Active Operating'
+    });
+    setIsMacModalOpen(true);
+  };
+
+  const handleOpenEditMachine = (mac: MachineryItem) => {
+    setEditingMac(mac);
+    setMacForm({ ...mac });
+    setIsMacModalOpen(true);
+  };
+
+  const handleSaveMachineSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const hrs = parseFloat(macForm.totalOperatingHours as any) || 0;
+    const fuel = parseFloat(macForm.dieselConsumptionLitresPerHr as any) || 0;
+    const op = parseFloat(macForm.hourlyOperatorRate as any) || 0;
+
+    if (editingMac) {
+      // Edit
+      const updated = machinery.map(m => m.id === editingMac.id ? {
+        ...m,
+        ...macForm,
+        totalOperatingHours: hrs,
+        dieselConsumptionLitresPerHr: fuel,
+        hourlyOperatorRate: op
+      } as MachineryItem : m);
+      setMachinery(updated);
+    } else {
+      // Create
+      const newMac: MachineryItem = {
+        id: `mac-${Date.now()}`,
+        machineCode: macForm.machineCode || `MCH-${Date.now()}`,
+        name: macForm.name || 'Heavy Construction Machinery',
+        category: (macForm.category as any) || 'Earthmoving',
+        ownership: macForm.ownership || 'Owned',
+        dailyRentalRate: macForm.ownership === 'Rented' ? 12000 : 0,
+        hourlyOperatorRate: op,
+        dieselConsumptionLitresPerHr: fuel,
+        totalOperatingHours: hrs,
+        currentSite: macForm.currentSite || 'Madurai Ring Road Site #1',
+        status: macForm.status || 'Active Operating'
+      };
+      setMachinery([newMac, ...machinery]);
+    }
+
+    setIsMacModalOpen(false);
+  };
+
   const handleAddLogSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const mac = machinery.find(m => m.id === logForm.machineId);
@@ -70,28 +144,6 @@ export const MachineryModule: React.FC = () => {
     setIsLogOpen(false);
   };
 
-  const handleAddMachine = () => {
-    const name = prompt('Enter Machinery Name (e.g. Caterpillar Excavator 20T):', 'Caterpillar 320D Excavator');
-    if (!name) return;
-    const cat = prompt('Enter Category (Earthmoving / Compaction / Paving / Lifting Crane):', 'Earthmoving');
-
-    const newMac: MachineryItem = {
-      id: `mac-${Date.now()}`,
-      machineCode: `MCH-EXC-${Math.floor(Math.random() * 90 + 10)}`,
-      name: name,
-      category: (cat as any) || 'Earthmoving',
-      ownership: 'Owned',
-      dailyRentalRate: 0,
-      hourlyOperatorRate: 320,
-      dieselConsumptionLitresPerHr: 14.5,
-      totalOperatingHours: 450,
-      currentSite: 'Madurai Ring Road Site #1',
-      status: 'Active Operating'
-    };
-
-    setMachinery([newMac, ...machinery]);
-  };
-
   const filteredFleet = machinery.filter(m =>
     m.name.toLowerCase().includes(search.toLowerCase()) ||
     m.machineCode.toLowerCase().includes(search.toLowerCase())
@@ -114,7 +166,7 @@ export const MachineryModule: React.FC = () => {
             Log Daily Operating & Fuel
           </button>
           <button
-            onClick={handleAddMachine}
+            onClick={handleOpenAddMachine}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -202,13 +254,7 @@ export const MachineryModule: React.FC = () => {
                       <td className="px-4 py-3.5 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
-                            onClick={() => {
-                              const newHrs = prompt(`Update Total Operating Hours for "${mac.name}":`, mac.totalOperatingHours.toString());
-                              if (newHrs) {
-                                mac.totalOperatingHours = parseFloat(newHrs) || mac.totalOperatingHours;
-                                setMachinery([...machinery]);
-                              }
-                            }}
+                            onClick={() => handleOpenEditMachine(mac)}
                             className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                             title="Edit Equipment Details"
                           >
@@ -286,6 +332,126 @@ export const MachineryModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Custom React Modal Form for Machinery Add & Edit */}
+      <Modal
+        isOpen={isMacModalOpen}
+        onClose={() => setIsMacModalOpen(false)}
+        title={editingMac ? `Edit Equipment: ${editingMac.machineCode}` : 'Add Heavy Equipment Machinery'}
+        subtitle="Manage fleet details, meter operating hours & fuel consumption rates"
+        maxWidth="xl"
+      >
+        <form onSubmit={handleSaveMachineSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Machine Code *</label>
+              <input
+                type="text"
+                required
+                value={macForm.machineCode || ''}
+                onChange={(e) => setMacForm({ ...macForm, machineCode: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-mono font-bold"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block font-bold text-slate-700 mb-1">Machinery Full Name *</label>
+              <input
+                type="text"
+                required
+                value={macForm.name || ''}
+                onChange={(e) => setMacForm({ ...macForm, name: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-semibold"
+                placeholder="e.g. Caterpillar 320D Hydraulic Excavator"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Category *</label>
+              <select
+                value={macForm.category || 'Earthmoving'}
+                onChange={(e) => setMacForm({ ...macForm, category: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold"
+              >
+                <option value="Earthmoving">Earthmoving (JCB / Excavator)</option>
+                <option value="Compaction">Compaction (10T Road Roller)</option>
+                <option value="Paving & Concrete">Paving & Concrete (Paver / Mixer)</option>
+                <option value="Lifting Crane">Lifting Crane & Loader</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Ownership *</label>
+              <select
+                value={macForm.ownership || 'Owned'}
+                onChange={(e) => setMacForm({ ...macForm, ownership: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold"
+              >
+                <option value="Owned">Company Owned</option>
+                <option value="Rented">Third-Party Rented</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Total Operating Hours *</label>
+              <input
+                type="number"
+                required
+                value={macForm.totalOperatingHours || 0}
+                onChange={(e) => setMacForm({ ...macForm, totalOperatingHours: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-blue-700"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Diesel Consumption (L/hr) *</label>
+              <input
+                type="number"
+                step="0.5"
+                required
+                value={macForm.dieselConsumptionLitresPerHr || 0}
+                onChange={(e) => setMacForm({ ...macForm, dieselConsumptionLitresPerHr: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-amber-700"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Operator Rate (₹ / hr)</label>
+              <input
+                type="number"
+                value={macForm.hourlyOperatorRate || 0}
+                onChange={(e) => setMacForm({ ...macForm, hourlyOperatorRate: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Current Site Location</label>
+              <input
+                type="text"
+                value={macForm.currentSite || ''}
+                onChange={(e) => setMacForm({ ...macForm, currentSite: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsMacModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+            >
+              <Save className="w-4 h-4" /> Save Equipment
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Log Daily Machinery Modal */}
       <Modal

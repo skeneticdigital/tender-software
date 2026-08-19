@@ -437,6 +437,16 @@ const mockUsersList: User[] = [
   { id: 'u-003', name: 'Karthik Raja', email: 'tender@tenderflow.com', role: 'Tender Manager', department: 'Tendering & Bidding', phone: '+91 98765 43211', status: 'Active', createdAt: new Date().toISOString() }
 ];
 
+let mockSettingsObject = {
+  companyName: 'Elvina Infra Pvt Ltd',
+  gstNumber: '33AAAAA0000A1Z5',
+  panNumber: 'AAAAA0000A',
+  logoUrl: 'https://example.com/logo.png',
+  currencyCode: 'INR (₹)',
+  whatsappAlerts: true,
+  whatsappSupervisorPhone: '+91 98450 99881'
+};
+
 export const api = {
   // Auth
   login: async (email: string, password: string) => {
@@ -590,6 +600,11 @@ export const api = {
     try {
       return await request<EmdTransaction>(`/emd/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     } catch {
+      const idx = mockEmds.findIndex(e => e.id === id);
+      if (idx !== -1) {
+        mockEmds[idx] = { ...mockEmds[idx], ...data };
+        return mockEmds[idx];
+      }
       return { id, ...data };
     }
   },
@@ -698,6 +713,11 @@ export const api = {
     try {
       return await request<Material>(`/materials/${id}`, { method: 'PUT', body: JSON.stringify(data) });
     } catch {
+      const idx = mockInventory.findIndex(i => i.id === id || i.materialId === id);
+      if (idx !== -1) {
+        mockInventory[idx] = { ...mockInventory[idx], ...data };
+        return mockInventory[idx] as any;
+      }
       return { ...mockMaterials[0], ...data, id } as Material;
     }
   },
@@ -812,6 +832,10 @@ export const api = {
     try {
       return await request<any>(`/notifications/${id}/read`, { method: 'PUT' });
     } catch {
+      const idx = mockNotifications.findIndex(n => n.id === id);
+      if (idx !== -1) {
+        mockNotifications[idx].isRead = true;
+      }
       return { success: true };
     }
   },
@@ -819,6 +843,9 @@ export const api = {
     try {
       return await request<any>('/notifications/read-all', { method: 'PUT' });
     } catch {
+      mockNotifications.forEach(n => {
+        n.isRead = true;
+      });
       return { success: true };
     }
   },
@@ -874,29 +901,18 @@ export const api = {
   },
   getSettings: async () => {
     try {
-      return await request<{ settings: any[]; deductionTypes: DeductionType[] }>('/settings');
+      const res = await request<any>('/settings');
+      return res && res.companyName ? res : mockSettingsObject;
     } catch (e) {
-      return {
-        settings: [
-          { key: 'companyName', value: 'Elvina Infra Pvt Ltd' },
-          { key: 'companyGstin', value: '33AAAAA0000A1Z5' },
-          { key: 'whatsappAlertEnabled', value: 'true' },
-          { key: 'whatsappSupervisorPhone', value: '+919876543210' }
-        ],
-        deductionTypes: [
-          { id: 'dt-1', name: 'TDS (Income Tax)', percentage: 2.0, isMandatory: true, description: 'Statutory Section 194C TDS' },
-          { id: 'dt-2', name: 'GST TDS', percentage: 2.0, isMandatory: true, description: 'Statutory GST TDS for Govt Works' },
-          { id: 'dt-3', name: 'Labour Welfare Cess', percentage: 1.0, isMandatory: true, description: '1% Building Construction Welfare Cess' },
-          { id: 'dt-4', name: 'Retention Guarantee', percentage: 5.0, isMandatory: true, description: 'Contract Security Deposit Retention' }
-        ]
-      };
+      return mockSettingsObject;
     }
   },
   updateSettings: async (data: any) => {
     try {
       return await request<any>('/settings', { method: 'PUT', body: JSON.stringify(data) });
     } catch {
-      return { success: true };
+      mockSettingsObject = { ...mockSettingsObject, ...data };
+      return mockSettingsObject;
     }
   },
   executeRawQuery: async (query: string) => {

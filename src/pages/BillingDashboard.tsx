@@ -219,8 +219,10 @@ BT
 (3. Labour Welfare Cess @ 1.0%      : Rs. ${cess}) Tj
 0 -18 Td
 (4. Retention Guarantee @ 5.0%      : Rs. ${retention}) Tj
-0 -50 Td
+ET
+BT
 /F2 9 Tf
+40 40 Td
 (Official Computer-Generated Tax Invoice PDF Document from TenderFlow ERP System) Tj
 ET
 endstream

@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Award, Plus, Search, Pencil, Trash2, CheckCircle2, Building2, Calendar, FileText } from 'lucide-react';
+import { Award, Plus, Search, Pencil, Trash2, Save } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { WorkExperienceCertificate } from '../types';
 import { Badge } from '../components/ui/Badge';
+import { Modal } from '../components/ui/Modal';
 
 export const CertificateModule: React.FC = () => {
   const [certs, setCerts] = useState<WorkExperienceCertificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Modal State (Add & Edit)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCert, setEditingCert] = useState<WorkExperienceCertificate | null>(null);
+  const [formData, setFormData] = useState<Partial<WorkExperienceCertificate>>({
+    certificateNumber: 'TN-PWD-WEC-2026-88',
+    projectName: '',
+    issuingDepartment: 'PWD Highways Division Madurai',
+    clientAuthority: 'Superintending Engineer PWD',
+    actualCompletedValue: 125000000,
+    commencementDate: '2023-01-10',
+    completionDate: '2025-11-20',
+    financialYear: '2025-2026',
+    qualityRating: 'Outstanding',
+    isPast5Years: true
+  });
 
   useEffect(() => {
     fetchData();
@@ -25,29 +42,62 @@ export const CertificateModule: React.FC = () => {
     }
   };
 
-  const handleAddCertificate = () => {
-    const projName = prompt('Enter Completed Project Name:', 'Construction of High Level Bridge across Vaigai River');
-    if (!projName) return;
-    const certNum = prompt('Enter Certificate Number:', `TN-PWD-WEC-2026-${Math.floor(Math.random() * 89 + 10)}`);
-    const valStr = prompt('Enter Actual Completed Contract Value (in INR):', '125000000');
-    if (!valStr) return;
-
-    const newCert: WorkExperienceCertificate = {
-      id: `cert-${Date.now()}`,
-      certificateNumber: certNum || `WEC-${Date.now()}`,
-      projectName: projName,
+  const handleOpenAdd = () => {
+    setEditingCert(null);
+    setFormData({
+      certificateNumber: `TN-PWD-WEC-2026-${Math.floor(Math.random() * 89 + 10)}`,
+      projectName: '',
       issuingDepartment: 'PWD Highways Division Madurai',
       clientAuthority: 'Superintending Engineer PWD',
-      contractValue: parseFloat(valStr) || 125000000,
-      actualCompletedValue: parseFloat(valStr) || 125000000,
+      actualCompletedValue: 125000000,
       commencementDate: '2023-01-10',
       completionDate: '2025-11-20',
       financialYear: '2025-2026',
       qualityRating: 'Outstanding',
       isPast5Years: true
-    };
+    });
+    setIsModalOpen(true);
+  };
 
-    setCerts([newCert, ...certs]);
+  const handleOpenEdit = (cert: WorkExperienceCertificate) => {
+    setEditingCert(cert);
+    setFormData({ ...cert });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(formData.actualCompletedValue as any) || 0;
+
+    if (editingCert) {
+      // Edit
+      const updated = certs.map(c => c.id === editingCert.id ? {
+        ...c,
+        ...formData,
+        contractValue: val,
+        actualCompletedValue: val
+      } as WorkExperienceCertificate : c);
+      setCerts(updated);
+    } else {
+      // Create
+      const newCert: WorkExperienceCertificate = {
+        id: `cert-${Date.now()}`,
+        certificateNumber: formData.certificateNumber || `WEC-${Date.now()}`,
+        projectName: formData.projectName || 'Completed Civil Infrastructure Contract',
+        issuingDepartment: formData.issuingDepartment || 'Government Highways Division',
+        clientAuthority: formData.clientAuthority || 'Superintending Engineer PWD',
+        contractValue: val,
+        actualCompletedValue: val,
+        commencementDate: formData.commencementDate || '2023-01-10',
+        completionDate: formData.completionDate || '2025-11-20',
+        financialYear: formData.financialYear || '2025-2026',
+        qualityRating: formData.qualityRating || 'Outstanding',
+        isPast5Years: true
+      };
+      setCerts([newCert, ...certs]);
+    }
+
+    setIsModalOpen(false);
   };
 
   const totalPast5YearsValue = certs
@@ -74,7 +124,7 @@ export const CertificateModule: React.FC = () => {
             <div className="text-base font-black text-blue-950">{formatINR(totalPast5YearsValue)}</div>
           </div>
           <button
-            onClick={handleAddCertificate}
+            onClick={handleOpenAdd}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -145,13 +195,7 @@ export const CertificateModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => {
-                            const newVal = prompt(`Update Completed Value for "${cert.projectName}":`, cert.actualCompletedValue.toString());
-                            if (newVal) {
-                              cert.actualCompletedValue = parseFloat(newVal) || cert.actualCompletedValue;
-                              setCerts([...certs]);
-                            }
-                          }}
+                          onClick={() => handleOpenEdit(cert)}
                           className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                           title="Edit Certificate Details"
                         >
@@ -177,6 +221,125 @@ export const CertificateModule: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Custom React Modal Form for Add/Edit Experience Certificate */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingCert ? `Edit Certificate: ${editingCert.certificateNumber}` : 'Archive Experience Certificate'}
+        subtitle="Record completed government contracts & 5-year tender eligibility value"
+        maxWidth="2xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Certificate Ref Number *</label>
+              <input
+                type="text"
+                required
+                value={formData.certificateNumber || ''}
+                onChange={(e) => setFormData({ ...formData, certificateNumber: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-mono font-bold"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block font-bold text-slate-700 mb-1">Completed Project Name *</label>
+              <input
+                type="text"
+                required
+                value={formData.projectName || ''}
+                onChange={(e) => setFormData({ ...formData, projectName: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+                placeholder="e.g. Construction of High Level Bridge across Vaigai River"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Issuing Government Dept *</label>
+              <input
+                type="text"
+                required
+                value={formData.issuingDepartment || ''}
+                onChange={(e) => setFormData({ ...formData, issuingDepartment: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Client Authority Signatory *</label>
+              <input
+                type="text"
+                required
+                value={formData.clientAuthority || ''}
+                onChange={(e) => setFormData({ ...formData, clientAuthority: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Completed Value (₹) *</label>
+              <input
+                type="number"
+                required
+                value={formData.actualCompletedValue || 0}
+                onChange={(e) => setFormData({ ...formData, actualCompletedValue: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold text-emerald-700"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Financial Year *</label>
+              <input
+                type="text"
+                required
+                value={formData.financialYear || ''}
+                onChange={(e) => setFormData({ ...formData, financialYear: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Completion Date *</label>
+              <input
+                type="date"
+                required
+                value={formData.completionDate || ''}
+                onChange={(e) => setFormData({ ...formData, completionDate: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Quality Rating *</label>
+              <select
+                value={formData.qualityRating || 'Outstanding'}
+                onChange={(e) => setFormData({ ...formData, qualityRating: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900"
+              >
+                <option value="Outstanding">★ Outstanding</option>
+                <option value="Very Good">★ Very Good</option>
+                <option value="Satisfactory">★ Satisfactory</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+            >
+              <Save className="w-4 h-4" /> Save Certificate
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

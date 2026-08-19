@@ -1,14 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Search, Pencil, Trash2, Building2, CheckCircle2, Clock, ShieldCheck } from 'lucide-react';
+import { FileText, Plus, Search, Pencil, Trash2, Building2, Save } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { WorkOrder } from '../types';
 import { Badge } from '../components/ui/Badge';
+import { Modal } from '../components/ui/Modal';
 
 export const WorkOrderModule: React.FC = () => {
   const [workOrders, setWorkOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+
+  // Modal State (Add & Edit)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingWo, setEditingWo] = useState<WorkOrder | null>(null);
+  const [formData, setFormData] = useState<Partial<WorkOrder>>({
+    workOrderNumber: 'WO/NHAI/MAD/2026/088',
+    title: '',
+    clientName: 'NHAI Tamil Nadu',
+    contractorName: 'Elvina Infra Pvt Ltd (Prime Contractor)',
+    orderType: 'Government Work Order',
+    value: 45000000,
+    startDate: new Date().toISOString().split('T')[0],
+    completionDate: '2027-12-31',
+    status: 'Active',
+    scopeOfWork: 'Civil infrastructure construction with RA billing',
+    paymentTerms: 'Monthly Running Account Bills',
+    retentionPct: 5.0,
+    emdDeposited: 450000
+  });
 
   useEffect(() => {
     fetchData();
@@ -26,31 +46,62 @@ export const WorkOrderModule: React.FC = () => {
     }
   };
 
-  const handleAddWorkOrder = () => {
-    const title = prompt('Enter Work Order Title:', 'Construction of Flyover Ramp & Retaining Wall');
-    if (!title) return;
-    const woNum = prompt('Enter Work Order / Contract Ref Number:', 'WO/NHAI/MAD/2026/088');
-    const valStr = prompt('Enter Contract Value (in INR):', '45000000');
-    if (!valStr) return;
-
-    const newWo: WorkOrder = {
-      id: `wo-${Date.now()}`,
-      workOrderNumber: woNum || `WO-${Date.now()}`,
-      title: title,
-      clientName: 'NHAI Tamil Nadu',
-      contractorName: 'Elvina Infra Pvt Ltd (Prime Contractor)',
+  const handleOpenAdd = () => {
+    setEditingWo(null);
+    setFormData({
+      workOrderNumber: `WO/2026/${Math.floor(Math.random() * 900 + 100)}`,
+      title: '',
+      clientName: 'National Highways Authority of India',
+      contractorName: 'Elvina Infra Pvt Ltd',
       orderType: 'Government Work Order',
-      value: parseFloat(valStr) || 45000000,
+      value: 25000000,
       startDate: new Date().toISOString().split('T')[0],
       completionDate: '2027-12-31',
-      status: 'Active',
-      scopeOfWork: 'Civil infrastructure construction with RA billing',
-      paymentTerms: 'Monthly Running Account Bills',
-      retentionPct: 5.0,
-      emdDeposited: 450000
-    };
+      status: 'Active'
+    });
+    setIsModalOpen(true);
+  };
 
-    setWorkOrders([newWo, ...workOrders]);
+  const handleOpenEdit = (wo: WorkOrder) => {
+    setEditingWo(wo);
+    setFormData({ ...wo });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = parseFloat(formData.value as any) || 0;
+
+    if (editingWo) {
+      // Edit
+      const updatedList = workOrders.map(w => w.id === editingWo.id ? {
+        ...w,
+        ...formData,
+        value: val
+      } as WorkOrder : w);
+      setWorkOrders(updatedList);
+    } else {
+      // Create
+      const newWo: WorkOrder = {
+        id: `wo-${Date.now()}`,
+        workOrderNumber: formData.workOrderNumber || `WO-${Date.now()}`,
+        title: formData.title || 'Civil Construction Work Order',
+        clientName: formData.clientName || 'Government Department',
+        contractorName: formData.contractorName || 'Elvina Infra Pvt Ltd',
+        orderType: formData.orderType || 'Government Work Order',
+        value: val,
+        startDate: formData.startDate || new Date().toISOString().split('T')[0],
+        completionDate: formData.completionDate || '2027-12-31',
+        status: formData.status || 'Active',
+        scopeOfWork: formData.scopeOfWork || 'Infrastructure construction',
+        paymentTerms: formData.paymentTerms || 'Monthly Running Account Bills',
+        retentionPct: formData.retentionPct || 5.0,
+        emdDeposited: formData.emdDeposited || 0
+      };
+      setWorkOrders([newWo, ...workOrders]);
+    }
+
+    setIsModalOpen(false);
   };
 
   const filtered = workOrders.filter(w => {
@@ -70,7 +121,7 @@ export const WorkOrderModule: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1">Management of active government work orders, inward prime contracts & outward subcontracts</p>
         </div>
         <button
-          onClick={handleAddWorkOrder}
+          onClick={handleOpenAdd}
           className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
@@ -152,13 +203,7 @@ export const WorkOrderModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => {
-                            const newVal = prompt(`Update Value for Work Order "${wo.workOrderNumber}":`, wo.value.toString());
-                            if (newVal) {
-                              wo.value = parseFloat(newVal) || wo.value;
-                              setWorkOrders([...workOrders]);
-                            }
-                          }}
+                          onClick={() => handleOpenEdit(wo)}
                           className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                           title="Edit Work Order"
                         >
@@ -184,6 +229,125 @@ export const WorkOrderModule: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Custom React Modal Form for Add/Edit Work Order */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingWo ? `Edit Work Order: ${editingWo.workOrderNumber}` : 'Issue Work Order / Subcontract'}
+        subtitle="Manage government contracts, inward & outward subcontractor agreements"
+        maxWidth="2xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Contract / WO Number *</label>
+              <input
+                type="text"
+                required
+                value={formData.workOrderNumber || ''}
+                onChange={(e) => setFormData({ ...formData, workOrderNumber: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-mono font-bold"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block font-bold text-slate-700 mb-1">Work Order Title / Scope *</label>
+              <input
+                type="text"
+                required
+                value={formData.title || ''}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+                placeholder="e.g. Construction of Flyover Ramp & Retaining Wall"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Contract Type *</label>
+              <select
+                value={formData.orderType || 'Government Work Order'}
+                onChange={(e) => setFormData({ ...formData, orderType: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold"
+              >
+                <option value="Government Work Order">Government Work Order</option>
+                <option value="Outward Subcontract">Outward Subcontract (Given Out)</option>
+                <option value="Inward Subcontract">Inward Subcontract (Received)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Client Name Authority *</label>
+              <input
+                type="text"
+                required
+                value={formData.clientName || ''}
+                onChange={(e) => setFormData({ ...formData, clientName: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Contractor / Subcontractor *</label>
+              <input
+                type="text"
+                required
+                value={formData.contractorName || ''}
+                onChange={(e) => setFormData({ ...formData, contractorName: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Total Contract Value (₹) *</label>
+              <input
+                type="number"
+                required
+                value={formData.value || 0}
+                onChange={(e) => setFormData({ ...formData, value: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Start Date *</label>
+              <input
+                type="date"
+                required
+                value={formData.startDate || ''}
+                onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Completion Target Date *</label>
+              <input
+                type="date"
+                required
+                value={formData.completionDate || ''}
+                onChange={(e) => setFormData({ ...formData, completionDate: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+            >
+              <Save className="w-4 h-4" /> Save Work Order
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

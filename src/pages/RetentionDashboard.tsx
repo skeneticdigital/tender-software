@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Pencil, Trash2, Save } from 'lucide-react';
 import { api, formatINR, formatLakhsCr } from '../lib/api';
 import { Retention } from '../types';
 import { Badge } from '../components/ui/Badge';
+import { Modal } from '../components/ui/Modal';
 
 export const RetentionDashboard: React.FC = () => {
   const [retentions, setRetentions] = useState<Retention[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [selectedRetention, setSelectedRetention] = useState<Retention | null>(null);
+  const [formData, setFormData] = useState<Partial<Retention>>({});
 
   const fetchRetentions = async () => {
     setLoading(true);
@@ -36,6 +41,26 @@ export const RetentionDashboard: React.FC = () => {
     } catch (err: any) {
       alert(err.message || 'Error updating retention');
     }
+  };
+
+  const handleOpenEdit = (r: Retention) => {
+    setSelectedRetention(r);
+    setFormData({ ...r });
+  };
+
+  const handleModalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedRetention) return;
+
+    const amt = parseFloat(formData.retentionAmount as any) || 0;
+    const updated = retentions.map(r => r.id === selectedRetention.id ? {
+      ...r,
+      ...formData,
+      retentionAmount: amt
+    } as Retention : r);
+
+    setRetentions(updated);
+    setSelectedRetention(null);
   };
 
   return (
@@ -90,12 +115,7 @@ export const RetentionDashboard: React.FC = () => {
                           </button>
                         )}
                         <button
-                          onClick={() => {
-                            const newStatus = prompt(`Update status for Retention Money "${r.billNumber || r.billNo}" (Withheld / Released):`, r.status);
-                            if (newStatus) {
-                              setRetentions(prev => prev.map(x => x.id === r.id ? { ...x, status: newStatus as any } : x));
-                            }
-                          }}
+                          onClick={() => handleOpenEdit(r)}
                           className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                           title="Edit Retention Record"
                         >
@@ -121,6 +141,67 @@ export const RetentionDashboard: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Custom React Modal Form for Edit Retention Money */}
+      {selectedRetention && (
+        <Modal
+          isOpen={!!selectedRetention}
+          onClose={() => setSelectedRetention(null)}
+          title={`Edit Retention Record: ${selectedRetention.billNumber || selectedRetention.billNo}`}
+          subtitle={`Project: ${selectedRetention.projectName}`}
+          maxWidth="md"
+        >
+          <form onSubmit={handleModalSubmit} className="space-y-4 text-xs">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Retention Amount (₹) *</label>
+              <input
+                type="number"
+                required
+                value={formData.retentionAmount || 0}
+                onChange={(e) => setFormData({ ...formData, retentionAmount: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold text-amber-800"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Expected Release Date *</label>
+              <input
+                type="date"
+                required
+                value={formData.expectedReleaseDate || ''}
+                onChange={(e) => setFormData({ ...formData, expectedReleaseDate: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Status *</label>
+              <select
+                value={formData.status || 'Withheld'}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900"
+              >
+                <option value="Withheld">Withheld in DLP Period</option>
+                <option value="Released">Released & Credited</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedRetention(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5"
+              >
+                <Save className="w-4 h-4" /> Save Retention Record
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 };

@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Plus, Search, Pencil, Trash2, Calendar, AlertTriangle, ShieldCheck, FileCheck, ExternalLink } from 'lucide-react';
+import { Building2, Plus, Search, Pencil, Trash2, Calendar, AlertTriangle, ShieldCheck, Save } from 'lucide-react';
 import { api } from '../lib/api';
 import { CompanyFilingDoc } from '../types';
 import { Badge } from '../components/ui/Badge';
+import { Modal } from '../components/ui/Modal';
 
 export const CompanyFilingModule: React.FC = () => {
   const [docs, setDocs] = useState<CompanyFilingDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+
+  // Modal State (Add & Edit)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDoc, setEditingDoc] = useState<CompanyFilingDoc | null>(null);
+  const [formData, setFormData] = useState<Partial<CompanyFilingDoc>>({
+    documentTitle: '',
+    documentCategory: 'Vehicle RC Book',
+    referenceNumber: 'RC-TN59-8819',
+    issuingAuthority: 'RTO Tamil Nadu / PWD Department',
+    issueDate: '2021-06-01',
+    expiryDate: '2026-11-30',
+    renewalCycleYears: 5
+  });
 
   useEffect(() => {
     fetchData();
@@ -26,27 +40,63 @@ export const CompanyFilingModule: React.FC = () => {
     }
   };
 
-  const handleAddDocument = () => {
-    const title = prompt('Enter Document Title (e.g. GST Registration Certificate):', 'Commercial Vehicle RC Book - Tipper Truck');
-    if (!title) return;
-    const cat = prompt('Enter Category (Government License / Tax Certificate / PWD Registration / Vehicle RC Book):', 'Vehicle RC Book');
-    const refNum = prompt('Enter License / Ref Number:', `RC-TN59-${Math.floor(Math.random() * 8999 + 1000)}`);
-    const expDate = prompt('Enter Expiry Date (YYYY-MM-DD):', '2026-11-30');
+  const handleOpenAdd = () => {
+    setEditingDoc(null);
+    setFormData({
+      documentTitle: '',
+      documentCategory: 'Vehicle RC Book',
+      referenceNumber: `RC-TN59-${Math.floor(Math.random() * 8999 + 1000)}`,
+      issuingAuthority: 'RTO Tamil Nadu',
+      issueDate: new Date().toISOString().split('T')[0],
+      expiryDate: '2028-12-31',
+      renewalCycleYears: 5
+    });
+    setIsModalOpen(true);
+  };
 
-    const newDoc: CompanyFilingDoc = {
-      id: `cfg-${Date.now()}`,
-      documentTitle: title,
-      documentCategory: (cat as any) || 'Vehicle RC Book',
-      referenceNumber: refNum || 'REF-10029',
-      issuingAuthority: 'Government Authority',
-      issueDate: '2021-06-01',
-      expiryDate: expDate || '2026-11-30',
-      renewalCycleYears: 5,
-      daysUntilExpiry: 180,
-      status: 'Renewal Due Soon'
-    };
+  const handleOpenEdit = (doc: CompanyFilingDoc) => {
+    setEditingDoc(doc);
+    setFormData({ ...doc });
+    setIsModalOpen(true);
+  };
 
-    setDocs([newDoc, ...docs]);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const exp = formData.expiryDate || '2026-12-31';
+    const daysLeft = Math.round((new Date(exp).getTime() - new Date().getTime()) / (1000 * 3600 * 24));
+    let computedStatus: 'Valid Active' | 'Renewal Due Soon' | 'Expired' = 'Valid Active';
+    if (daysLeft < 0) computedStatus = 'Expired';
+    else if (daysLeft < 90) computedStatus = 'Renewal Due Soon';
+
+    const finalStatus = formData.status || computedStatus;
+
+    if (editingDoc) {
+      // Edit
+      const updated = docs.map(d => d.id === editingDoc.id ? {
+        ...d,
+        ...formData,
+        daysUntilExpiry: daysLeft,
+        status: finalStatus
+      } as CompanyFilingDoc : d);
+      setDocs(updated);
+    } else {
+      // Create
+      const newDoc: CompanyFilingDoc = {
+        id: `cfg-${Date.now()}`,
+        documentTitle: formData.documentTitle || 'Company Document Archive',
+        documentCategory: (formData.documentCategory as any) || 'Vehicle RC Book',
+        referenceNumber: formData.referenceNumber || 'REF-10029',
+        issuingAuthority: formData.issuingAuthority || 'Government Authority',
+        issueDate: formData.issueDate || '2021-06-01',
+        expiryDate: exp,
+        renewalCycleYears: formData.renewalCycleYears || 5,
+        daysUntilExpiry: daysLeft,
+        status: finalStatus
+      };
+      setDocs([newDoc, ...docs]);
+    }
+
+    setIsModalOpen(false);
   };
 
   const filtered = docs.filter(d => {
@@ -65,7 +115,7 @@ export const CompanyFilingModule: React.FC = () => {
           <p className="text-xs text-slate-500 mt-1">Centralized digital archive for company registrations, PWD/NHAI licenses, vehicle RC books & 3/5-year renewal alert tracking</p>
         </div>
         <button
-          onClick={handleAddDocument}
+          onClick={handleOpenAdd}
           className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2"
         >
           <Plus className="w-4 h-4" />
@@ -176,13 +226,7 @@ export const CompanyFilingModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => {
-                            const newExp = prompt(`Update Expiry Date for "${d.documentTitle}":`, d.expiryDate);
-                            if (newExp) {
-                              d.expiryDate = newExp;
-                              setDocs([...docs]);
-                            }
-                          }}
+                          onClick={() => handleOpenEdit(d)}
                           className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                           title="Edit Document Dates"
                         >
@@ -208,6 +252,130 @@ export const CompanyFilingModule: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Custom React Modal Form for Add/Edit Company Filing Document */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingDoc ? `Edit Document: ${editingDoc.referenceNumber}` : 'Archive Company Document'}
+        subtitle="Manage government registrations, PWD contractor licenses, GST certs & vehicle RC books"
+        maxWidth="2xl"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Document Title *</label>
+              <input
+                type="text"
+                required
+                value={formData.documentTitle || ''}
+                onChange={(e) => setFormData({ ...formData, documentTitle: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+                placeholder="e.g. Commercial Vehicle RC Book - Tipper Truck"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Reference / License Number *</label>
+              <input
+                type="text"
+                required
+                value={formData.referenceNumber || ''}
+                onChange={(e) => setFormData({ ...formData, referenceNumber: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-slate-900 font-bold"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Category *</label>
+              <select
+                value={formData.documentCategory || 'Vehicle RC Book'}
+                onChange={(e) => setFormData({ ...formData, documentCategory: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900"
+              >
+                <option value="PWD / NHAI Registration">PWD / NHAI Registration</option>
+                <option value="Tax Certificate (GST/PAN)">Tax Certificate (GST / PAN)</option>
+                <option value="Vehicle RC Book">Vehicle RC Book</option>
+                <option value="Government License">Government License</option>
+              </select>
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Issuing Authority *</label>
+              <input
+                type="text"
+                required
+                value={formData.issuingAuthority || ''}
+                onChange={(e) => setFormData({ ...formData, issuingAuthority: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Issue Date *</label>
+              <input
+                type="date"
+                required
+                value={formData.issueDate || ''}
+                onChange={(e) => setFormData({ ...formData, issueDate: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Expiry Date *</label>
+              <input
+                type="date"
+                required
+                value={formData.expiryDate || ''}
+                onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Renewal Cycle (Years) *</label>
+              <select
+                value={formData.renewalCycleYears || 5}
+                onChange={(e) => setFormData({ ...formData, renewalCycleYears: parseInt(e.target.value) || 5 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-blue-700"
+              >
+                <option value={3}>3 Years Cycle</option>
+                <option value={5}>5 Years Cycle</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-700 mb-1">Document Status Override</label>
+            <select
+              value={formData.status || 'Valid Active'}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900"
+            >
+              <option value="Valid Active">Valid Active</option>
+              <option value="Renewal Due Soon">Renewal Due Soon</option>
+              <option value="Expired">Expired</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+            >
+              <Save className="w-4 h-4" /> Save Document Entry
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Search, Pencil, Trash2, IndianRupee, HardHat, CalendarCheck, ShieldCheck } from 'lucide-react';
+import { Users, Plus, Search, Pencil, Trash2, IndianRupee, Save } from 'lucide-react';
 import { api, formatINR } from '../lib/api';
 import { LabourWorker, LabourDisbursement } from '../types';
 import { Badge } from '../components/ui/Badge';
@@ -11,6 +11,18 @@ export const LabourModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'roster' | 'disbursements'>('roster');
   const [search, setSearch] = useState('');
+
+  // Worker Modal State (Add & Edit)
+  const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
+  const [editingWorker, setEditingWorker] = useState<LabourWorker | null>(null);
+  const [workerForm, setWorkerForm] = useState<Partial<LabourWorker>>({
+    workerName: '',
+    category: 'Mason (Kottan)',
+    dailyWageRate: 1100,
+    phone: '+91 98450 99881',
+    assignedProject: 'Madurai Ring Road Expansion',
+    status: 'Active'
+  });
 
   // Disbursement Modal
   const [isDisbOpen, setIsDisbOpen] = useState(false);
@@ -45,23 +57,52 @@ export const LabourModule: React.FC = () => {
     }
   };
 
-  const handleAddWorker = () => {
-    const name = prompt('Enter Worker Name (e.g. K. Arumugam Master):', 'K. Arumugam (Mason Master)');
-    if (!name) return;
-    const cat = prompt('Enter Category (Mason (Kottan) / Coolie (Mazdoor) / Machine Operator / Supervisor):', 'Mason (Kottan)');
-    const wage = prompt('Enter Daily Wage Rate (INR):', '1100');
-
-    const newWorker: LabourWorker = {
-      id: `lw-${Date.now()}`,
-      workerName: name,
-      category: (cat as any) || 'Mason (Kottan)',
-      dailyWageRate: parseFloat(wage || '1100') || 1100,
+  const handleOpenAddWorker = () => {
+    setEditingWorker(null);
+    setWorkerForm({
+      workerName: '',
+      category: 'Mason (Kottan)',
+      dailyWageRate: 1100,
       phone: '+91 98450 99881',
       assignedProject: 'Madurai Ring Road Expansion',
       status: 'Active'
-    };
+    });
+    setIsWorkerModalOpen(true);
+  };
 
-    setWorkers([newWorker, ...workers]);
+  const handleOpenEditWorker = (w: LabourWorker) => {
+    setEditingWorker(w);
+    setWorkerForm({ ...w });
+    setIsWorkerModalOpen(true);
+  };
+
+  const handleSaveWorkerSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const wage = parseFloat(workerForm.dailyWageRate as any) || 0;
+
+    if (editingWorker) {
+      // Edit
+      const updated = workers.map(w => w.id === editingWorker.id ? {
+        ...w,
+        ...workerForm,
+        dailyWageRate: wage
+      } as LabourWorker : w);
+      setWorkers(updated);
+    } else {
+      // Create
+      const newWorker: LabourWorker = {
+        id: `lw-${Date.now()}`,
+        workerName: workerForm.workerName || 'New Worker',
+        category: workerForm.category || 'Mason (Kottan)',
+        dailyWageRate: wage,
+        phone: workerForm.phone || '+91 98450 99881',
+        assignedProject: workerForm.assignedProject || 'Madurai Ring Road Expansion',
+        status: workerForm.status || 'Active'
+      };
+      setWorkers([newWorker, ...workers]);
+    }
+
+    setIsWorkerModalOpen(false);
   };
 
   const handleAddDisbursementSubmit = (e: React.FormEvent) => {
@@ -112,7 +153,7 @@ export const LabourModule: React.FC = () => {
             Record Wage Payout
           </button>
           <button
-            onClick={handleAddWorker}
+            onClick={handleOpenAddWorker}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -189,13 +230,7 @@ export const LabourModule: React.FC = () => {
                       <td className="px-4 py-3.5 text-center">
                         <div className="flex items-center justify-center gap-1">
                           <button
-                            onClick={() => {
-                              const newRate = prompt(`Update Daily Wage for "${w.workerName}":`, w.dailyWageRate.toString());
-                              if (newRate) {
-                                w.dailyWageRate = parseFloat(newRate) || w.dailyWageRate;
-                                setWorkers([...workers]);
-                              }
-                            }}
+                            onClick={() => handleOpenEditWorker(w)}
                             className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                             title="Edit Worker Profile"
                           >
@@ -270,6 +305,91 @@ export const LabourModule: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Custom React Modal Form for Worker Profile Add & Edit */}
+      <Modal
+        isOpen={isWorkerModalOpen}
+        onClose={() => setIsWorkerModalOpen(false)}
+        title={editingWorker ? `Edit Worker Profile: ${editingWorker.workerName}` : 'Add New Worker Profile'}
+        subtitle="Manage site manpower details, skill categories and daily wage rates"
+        maxWidth="xl"
+      >
+        <form onSubmit={handleSaveWorkerSubmit} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Worker Full Name *</label>
+              <input
+                type="text"
+                required
+                value={workerForm.workerName || ''}
+                onChange={(e) => setWorkerForm({ ...workerForm, workerName: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-semibold"
+                placeholder="e.g. K. Arumugam (Mason Master)"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Skill Category *</label>
+              <select
+                value={workerForm.category || 'Mason (Kottan)'}
+                onChange={(e) => setWorkerForm({ ...workerForm, category: e.target.value as any })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold"
+              >
+                <option value="Mason (Kottan)">Mason (Kottan / Mason Master)</option>
+                <option value="Coolie (Mazdoor)">Coolie (Mazdoor / Helper)</option>
+                <option value="Machine Operator">Machine Operator (JCB/Roller)</option>
+                <option value="Site Supervisor">Site Supervisor</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Daily Wage Rate (₹ / Day) *</label>
+              <input
+                type="number"
+                required
+                value={workerForm.dailyWageRate || 0}
+                onChange={(e) => setWorkerForm({ ...workerForm, dailyWageRate: parseFloat(e.target.value) || 0 })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-bold text-emerald-700"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Phone Contact</label>
+              <input
+                type="text"
+                value={workerForm.phone || ''}
+                onChange={(e) => setWorkerForm({ ...workerForm, phone: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-mono text-slate-900"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Assigned Site / Project</label>
+              <input
+                type="text"
+                value={workerForm.assignedProject || ''}
+                onChange={(e) => setWorkerForm({ ...workerForm, assignedProject: e.target.value })}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 font-medium"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setIsWorkerModalOpen(false)}
+              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md flex items-center gap-1.5"
+            >
+              <Save className="w-4 h-4" /> Save Worker Profile
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Record Wage Disbursement Modal */}
       <Modal

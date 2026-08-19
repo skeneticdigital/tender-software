@@ -15,6 +15,8 @@ export const EmdDashboard: React.FC = () => {
 
   // Selected EMD update modal state
   const [selectedEmd, setSelectedEmd] = useState<EmdTransaction | null>(null);
+  const [selectedSd, setSelectedSd] = useState<SecurityDeposit | null>(null);
+  const [sdFormStatus, setSdFormStatus] = useState<'Active' | 'Released' | 'Claimed'>('Active');
   const [emdUpdateForm, setEmdUpdateForm] = useState({
     refundStatus: '',
     actualRefundDate: new Date().toISOString().split('T')[0],
@@ -262,10 +264,8 @@ export const EmdDashboard: React.FC = () => {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => {
-                            const newStatus = prompt(`Update status for Security Deposit "${s.refNumber}" (Active / Released / Claimed):`, s.status);
-                            if (newStatus) {
-                              setSds(prev => prev.map(x => x.id === s.id ? { ...x, status: newStatus as any } : x));
-                            }
+                            setSelectedSd(s);
+                            setSdFormStatus(s.status);
                           }}
                           className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
                           title="Edit Security Deposit"
@@ -362,6 +362,63 @@ export const EmdDashboard: React.FC = () => {
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold"
               >
                 Save EMD Status
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Modal for Security Deposit Update */}
+      {selectedSd && (
+        <Modal
+          isOpen={!!selectedSd}
+          onClose={() => setSelectedSd(null)}
+          title={`Edit Security Deposit: ${selectedSd.refNumber}`}
+          subtitle={`Project: ${selectedSd.projectName} | Amount: ${formatINR(selectedSd.amount)}`}
+          maxWidth="md"
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              setSds(prev => prev.map(x => x.id === selectedSd.id ? { ...x, status: sdFormStatus } : x));
+              setSelectedSd(null);
+            }}
+            className="space-y-4 text-xs"
+          >
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Deposit Type</label>
+              <input
+                type="text"
+                disabled
+                value={selectedSd.depositType}
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg font-bold text-slate-600"
+              />
+            </div>
+            <div>
+              <label className="block font-bold text-slate-700 mb-1">Status *</label>
+              <select
+                value={sdFormStatus}
+                onChange={(e) => setSdFormStatus(e.target.value as any)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-900"
+              >
+                <option value="Active">Active / Deposited</option>
+                <option value="Released">Released to Bank Account</option>
+                <option value="Claimed">Claimed / Forfeited</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedSd(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-xl text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold"
+              >
+                Save Security Deposit Status
               </button>
             </div>
           </form>

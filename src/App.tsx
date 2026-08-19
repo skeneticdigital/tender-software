@@ -155,7 +155,7 @@ const AppContent: React.FC = () => {
             )}
 
             {activeTab === 'notifications' && (
-              <NotificationsPage />
+              <NotificationsPage onNavigateTab={handleNavigateTab} />
             )}
 
             {activeTab === 'users' && (
