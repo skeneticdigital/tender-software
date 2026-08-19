@@ -2,7 +2,8 @@ import React from 'react';
 import {
   LayoutDashboard, FileText, Landmark, HardHat, Package, Warehouse,
   IndianRupee, CreditCard, ShieldAlert, BarChart3, FolderKanban,
-  Bell, Users, Settings, History, Building2, ChevronRight, Database
+  Bell, Users, Settings, History, Building2, ChevronRight, Database,
+  Calculator, TrendingUp, FileSpreadsheet, Truck, Award
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -16,15 +17,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
   const { user } = useAuth();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['*'] },
-    { id: 'tenders', label: 'Tenders', icon: FileText, roles: ['*'] },
-    { id: 'emd', label: 'EMD & Deposits', icon: Landmark, roles: ['*'] },
-    { id: 'projects', label: 'Projects', icon: HardHat, roles: ['*'] },
-    { id: 'materials', label: 'Material Master', icon: Package, roles: ['*'] },
+    { id: 'dashboard', label: 'Dashboard Overview', icon: LayoutDashboard, roles: ['*'] },
+    // 11 Core ERP Modules
+    { id: 'tenders', label: '1. Tender Module', icon: FileText, roles: ['*'] },
+    { id: 'estimates', label: '2. Estimate Module', icon: Calculator, roles: ['*'] },
+    { id: 'rate-analysis', label: '3. Rate Calculations', icon: TrendingUp, roles: ['*'] },
+    { id: 'work-orders', label: '4. Work Order Module', icon: FileSpreadsheet, roles: ['*'] },
+    { id: 'projects', label: '5. Project Management', icon: HardHat, roles: ['*'] },
+    { id: 'materials', label: '6. Material Management', icon: Package, roles: ['*'] },
     { id: 'inventory', label: 'Inventory & Dispatch', icon: Warehouse, roles: ['*'] },
-    { id: 'billing', label: 'Billing & Invoices', icon: IndianRupee, roles: ['*'] },
+    { id: 'machinery', label: '7. Machinery Management', icon: Truck, roles: ['*'] },
+    { id: 'labour', label: '8. Labour Management', icon: Users, roles: ['*'] },
+    { id: 'billing', label: '9. Billing Management', icon: IndianRupee, roles: ['*'] },
+    { id: 'emd', label: 'EMDs & Deposits', icon: Landmark, roles: ['*'] },
     { id: 'payments', label: 'Payment Tracking', icon: CreditCard, roles: ['*'] },
     { id: 'retention', label: 'Retention Money', icon: ShieldAlert, roles: ['*'] },
+    { id: 'company-filings', label: '10. Company Filings', icon: Building2, roles: ['*'] },
+    { id: 'certificates', label: '11. Experience Certs', icon: Award, roles: ['*'] },
+    // System Utilities
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3, roles: ['*'] },
     { id: 'notifications', label: 'Notifications', icon: Bell, roles: ['*'] },
     { id: 'users', label: 'Users & Roles', icon: Users, roles: ['Super Admin', 'Admin'] },

@@ -1,7 +1,9 @@
 import {
   User, Tender, EmdTransaction, SecurityDeposit, Project, Material,
   MaterialDispatch, MaterialReceipt, MaterialConsumption, Bill, Payment,
-  Retention, AppDocument, AppNotification, AuditLog, ActionItem, DeductionType
+  Retention, AppDocument, AppNotification, AuditLog, ActionItem, DeductionType,
+  EstimateComparison, EstimateItem, RateAnalysisItem, WorkOrder, MachineryItem,
+  MachineryLog, LabourWorker, LabourDisbursement, CompanyFilingDoc, WorkExperienceCertificate
 } from '../types';
 
 const API_BASE = '/api';
@@ -913,5 +915,334 @@ export const api = {
     } catch {
       return { id: `doc-${Date.now()}`, ...data };
     }
+  },
+
+  // 2. Estimate Module API
+  getEstimates: async () => mockEstimates,
+  createEstimate: async (data: any) => {
+    const newEst: EstimateComparison = { id: `est-${Date.now()}`, ...data };
+    mockEstimates.unshift(newEst);
+    return newEst;
+  },
+
+  // 3. Rate Calculations API
+  getRateAnalysis: async () => mockRateAnalysis,
+
+  // 4. Work Orders API
+  getWorkOrders: async () => mockWorkOrders,
+  createWorkOrder: async (data: any) => {
+    const newWo: WorkOrder = { id: `wo-${Date.now()}`, ...data };
+    mockWorkOrders.unshift(newWo);
+    return newWo;
+  },
+
+  // 7. Machinery Management API
+  getMachinery: async () => mockMachinery,
+  getMachineryLogs: async () => mockMachineryLogs,
+  addMachineryLog: async (data: any) => {
+    const newLog: MachineryLog = { id: `mlog-${Date.now()}`, ...data };
+    mockMachineryLogs.unshift(newLog);
+    return newLog;
+  },
+
+  // 8. Labour Management API
+  getLabourWorkers: async () => mockLabourWorkers,
+  getLabourDisbursements: async () => mockLabourDisbursements,
+  addLabourDisbursement: async (data: any) => {
+    const newDisb: LabourDisbursement = { id: `ldisb-${Date.now()}`, ...data };
+    mockLabourDisbursements.unshift(newDisb);
+    return newDisb;
+  },
+
+  // 10. Company Filing Management API
+  getCompanyFilings: async () => mockCompanyFilings,
+  addCompanyFiling: async (data: any) => {
+    const newFiling: CompanyFilingDoc = { id: `cfg-${Date.now()}`, ...data };
+    mockCompanyFilings.unshift(newFiling);
+    return newFiling;
+  },
+
+  // 11. Work Experience Certificate API
+  getCertificates: async () => mockCertificates,
+  addCertificate: async (data: any) => {
+    const newCert: WorkExperienceCertificate = { id: `cert-${Date.now()}`, ...data };
+    mockCertificates.unshift(newCert);
+    return newCert;
   }
 };
+
+// --- Rich Mock Datasets for 11 Modules ---
+
+export const mockEstimates: EstimateComparison[] = [
+  {
+    id: 'est-001',
+    projectId: 'p-001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    estimateName: 'Detailed BOQ & Quantity Take-off Estimate v2',
+    date: '2026-05-10',
+    totalEstimate1Value: 185000000,
+    totalEstimate2Value: 198200000,
+    varianceValue: 13200000,
+    remarks: 'Estimate 2 includes revised market price escalation for TMT Steel and Bitumen.',
+    items: [
+      {
+        id: 'ei-1',
+        code: 'BOQ-CONC-01',
+        description: 'M30 Grade Reinforced Cement Concrete for Bridge Piers & Abutments',
+        unit: 'cu.m',
+        quantity: 4500,
+        length: 20,
+        width: 15,
+        height: 15,
+        steelQtyPerUnitKg: 110,
+        cementQtyPerUnitBags: 7.8,
+        sandQtyPerUnitCuM: 0.45,
+        jellyQtyPerUnitCuM: 0.85,
+        estimate1Rate: 8500,
+        estimate1Total: 38250000,
+        estimate2Rate: 9200,
+        estimate2Total: 41400000,
+        varianceAmount: 3150000,
+        variancePct: 8.23
+      },
+      {
+        id: 'ei-2',
+        code: 'BOQ-STEL-02',
+        description: 'Fe550D High Yield Strength Deformed TMT Bars Cutting & Bending',
+        unit: 'MT',
+        quantity: 495,
+        steelQtyPerUnitKg: 1000,
+        cementQtyPerUnitBags: 0,
+        sandQtyPerUnitCuM: 0,
+        jellyQtyPerUnitCuM: 0,
+        estimate1Rate: 68000,
+        estimate1Total: 33660000,
+        estimate2Rate: 72500,
+        estimate2Total: 35887500,
+        varianceAmount: 2227500,
+        variancePct: 6.62
+      }
+    ]
+  }
+];
+
+export const mockRateAnalysis: RateAnalysisItem[] = [
+  {
+    id: 'ra-001',
+    itemCode: 'RAT-CONC-M30',
+    itemName: 'M30 Ready Mix Concrete (Pumping included)',
+    unit: 'cu.m',
+    tenderEstimatedRate: 7800,
+    currentMarketRate: 8450,
+    variancePerUnit: 650,
+    variancePct: 8.33,
+    labourComponentRate: 1200,
+    materialComponentRate: 5800,
+    machineryComponentRate: 850,
+    overheadProfitPct: 10,
+    finalAnalyzedRate: 8635,
+    status: 'Tight Margin',
+    lastUpdated: '2026-05-18'
+  },
+  {
+    id: 'ra-002',
+    itemCode: 'RAT-ASPH-50MM',
+    itemName: 'Bituminous Concrete 50mm Layer Paving',
+    unit: 'sq.m',
+    tenderEstimatedRate: 620,
+    currentMarketRate: 580,
+    variancePerUnit: -40,
+    variancePct: -6.45,
+    labourComponentRate: 90,
+    materialComponentRate: 380,
+    machineryComponentRate: 110,
+    overheadProfitPct: 15,
+    finalAnalyzedRate: 667,
+    status: 'Profitable',
+    lastUpdated: '2026-05-15'
+  }
+];
+
+export const mockWorkOrders: WorkOrder[] = [
+  {
+    id: 'wo-001',
+    workOrderNumber: 'WO/NHAI/MAD/2026/041',
+    title: 'Madurai Ring Road 4-Lane Expansion Package I',
+    clientName: 'National Highways Authority of India (NHAI)',
+    contractorName: 'Elvina Infra Pvt Ltd (Prime Contractor)',
+    orderType: 'Government Work Order',
+    value: 245000000,
+    startDate: '2026-01-15',
+    completionDate: '2027-07-31',
+    status: 'Active',
+    scopeOfWork: '4-Laning of Madurai Bypass Road 14.2 km with 2 Minor Bridges & Culverts',
+    paymentTerms: 'Monthly Running Account (RA) Bills with 5% Retention',
+    retentionPct: 5.0,
+    emdDeposited: 2450000
+  },
+  {
+    id: 'wo-002',
+    workOrderNumber: 'SUB-WO/2026/ELEC-09',
+    title: 'Highway Street Lighting & Electrical Substation Work',
+    clientName: 'Elvina Infra Pvt Ltd',
+    contractorName: 'Sri Lakshmi Electrical Contractors (Subcontractor)',
+    orderType: 'Outward Subcontract',
+    value: 18500000,
+    startDate: '2026-03-01',
+    completionDate: '2026-11-30',
+    status: 'Active',
+    scopeOfWork: 'Installation of 340 LED Pole Lights, Cabling, and 11kV Transformer Substation',
+    paymentTerms: 'Milestone Based: 20% Advance, 60% Work Progress, 20% Commissioning',
+    retentionPct: 5.0,
+    emdDeposited: 185000
+  }
+];
+
+export const mockMachinery: MachineryItem[] = [
+  {
+    id: 'mac-001',
+    machineCode: 'MCH-JCB-01',
+    name: 'JCB 3DX Super Backhoe Loader',
+    category: 'Earthmoving',
+    ownership: 'Owned',
+    dailyRentalRate: 0,
+    hourlyOperatorRate: 280,
+    dieselConsumptionLitresPerHr: 8.5,
+    totalOperatingHours: 1420,
+    currentSite: 'Madurai Ring Road Site #1',
+    status: 'Active Operating'
+  },
+  {
+    id: 'mac-002',
+    machineCode: 'MCH-ROLR-02',
+    name: 'Hamm 311 Heavy Vibratory Soil Compactor Roller 11T',
+    category: 'Compaction',
+    ownership: 'Rented',
+    rentalVendor: 'Tamilnadu Heavy Cranes & Equipment Hire',
+    dailyRentalRate: 7500,
+    hourlyOperatorRate: 300,
+    dieselConsumptionLitresPerHr: 12.0,
+    totalOperatingHours: 680,
+    currentSite: 'Coimbatore Underground Pipeline Site #2',
+    status: 'Active Operating'
+  }
+];
+
+export const mockMachineryLogs: MachineryLog[] = [
+  {
+    id: 'mlog-001',
+    machineId: 'mac-001',
+    machineName: 'JCB 3DX Super Backhoe Loader (MCH-JCB-01)',
+    date: '2026-05-18',
+    projectId: 'p-001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    operatingHours: 8.5,
+    startMeterReading: 1411.5,
+    endMeterReading: 1420.0,
+    dieselFilledLitres: 70,
+    fuelCost: 6650,
+    operatorSalary: 2380,
+    rentalExpense: 0,
+    totalDailyExpense: 9030,
+    workDoneDescription: 'Earth excavation and trenching for drain line along chainage 4+200 to 4+600.'
+  }
+];
+
+export const mockLabourWorkers: LabourWorker[] = [
+  {
+    id: 'lw-001',
+    workerName: 'M. Palanivel (Kottan Master)',
+    category: 'Mason (Kottan)',
+    dailyWageRate: 1100,
+    phone: '+91 98421 88312',
+    assignedProject: 'Madurai Ring Road Expansion',
+    status: 'Active'
+  },
+  {
+    id: 'lw-002',
+    workerName: 'S. Ramar (Mazdoor Leader)',
+    category: 'Coolie (Mazdoor)',
+    dailyWageRate: 650,
+    phone: '+91 97860 12345',
+    assignedProject: 'Madurai Ring Road Expansion',
+    status: 'Active'
+  }
+];
+
+export const mockLabourDisbursements: LabourDisbursement[] = [
+  {
+    id: 'ld-001',
+    projectId: 'p-001',
+    projectName: 'Madurai Ring Road Expansion Project',
+    date: '2026-05-18',
+    masonsCount: 14,
+    cooliesCount: 38,
+    operatorsCount: 4,
+    totalManpowerCount: 56,
+    masonsWageTotal: 15400,
+    cooliesWageTotal: 24700,
+    totalDisbursementAmount: 46300,
+    paymentMode: 'Cash',
+    supervisorInCharge: 'V. Gunaseelan',
+    remarks: 'Daily muster roll wage payout for culvert concrete pouring gang.'
+  }
+];
+
+export const mockCompanyFilings: CompanyFilingDoc[] = [
+  {
+    id: 'cfg-001',
+    documentTitle: 'Tamil Nadu PWD Class I Highway Contractor Registration',
+    documentCategory: 'PWD / NHAI Registration',
+    referenceNumber: 'PWD/TN/CLASS-I/2023/8892',
+    issuingAuthority: 'Chief Engineer, PWD Tamil Nadu',
+    issueDate: '2023-06-15',
+    expiryDate: '2028-06-14',
+    renewalCycleYears: 5,
+    daysUntilExpiry: 755,
+    status: 'Valid Active'
+  },
+  {
+    id: 'cfg-002',
+    documentTitle: 'Commercial Vehicle RC Book - JCB 3DX (TN-59-CA-8891)',
+    documentCategory: 'Vehicle RC Book',
+    referenceNumber: 'RC-TN59CA8891',
+    issuingAuthority: 'RTO Madurai South',
+    issueDate: '2021-09-10',
+    expiryDate: '2026-09-09',
+    renewalCycleYears: 5,
+    daysUntilExpiry: 113,
+    status: 'Renewal Due Soon'
+  }
+];
+
+export const mockCertificates: WorkExperienceCertificate[] = [
+  {
+    id: 'cert-001',
+    certificateNumber: 'TN-PWD-WEC-2025-014',
+    projectName: 'Construction of 4-Lane ROB Bridge at Dindigul Highway Junction',
+    issuingDepartment: 'Public Works Department (PWD) Bridges Division',
+    clientAuthority: 'Executive Engineer, PWD Dindigul',
+    contractValue: 145000000,
+    actualCompletedValue: 148200000,
+    commencementDate: '2022-04-10',
+    completionDate: '2025-03-31',
+    financialYear: '2024-2025',
+    qualityRating: 'Outstanding',
+    isPast5Years: true
+  },
+  {
+    id: 'cert-002',
+    certificateNumber: 'TWAD-WEC-2024-88',
+    projectName: 'Coimbatore Combined Water Supply Scheme (CWSS) Pipeline Network',
+    issuingDepartment: 'Tamil Nadu Water Supply & Drainage Board (TWAD)',
+    clientAuthority: 'Superintending Engineer, TWAD Board Coimbatore',
+    contractValue: 98000000,
+    actualCompletedValue: 98000000,
+    commencementDate: '2021-08-01',
+    completionDate: '2024-01-20',
+    financialYear: '2023-2024',
+    qualityRating: 'Very Good',
+    isPast5Years: true
+  }
+];
+

@@ -356,3 +356,172 @@ export interface ActionItem {
   linkModule: string;
   linkId: string;
 }
+
+// 2. Estimate Module Interfaces
+export interface EstimateItem {
+  id: string;
+  code: string;
+  description: string;
+  unit: string; // sq.m, cu.m, MT, kg, etc.
+  quantity: number;
+  // Dimensions
+  length?: number;
+  width?: number;
+  height?: number;
+  // Material coefficient per unit
+  steelQtyPerUnitKg: number;
+  cementQtyPerUnitBags: number;
+  sandQtyPerUnitCuM: number;
+  jellyQtyPerUnitCuM: number;
+  // Estimate 1 vs Estimate 2
+  estimate1Rate: number;
+  estimate1Total: number;
+  estimate2Rate: number;
+  estimate2Total: number;
+  varianceAmount: number;
+  variancePct: number;
+}
+
+export interface EstimateComparison {
+  id: string;
+  projectId: string;
+  projectName: string;
+  estimateName: string;
+  date: string;
+  totalEstimate1Value: number;
+  totalEstimate2Value: number;
+  varianceValue: number;
+  items: EstimateItem[];
+  remarks?: string;
+}
+
+// 3. Rate Calculations Module Interfaces
+export interface RateAnalysisItem {
+  id: string;
+  itemCode: string;
+  itemName: string;
+  unit: string;
+  tenderEstimatedRate: number;
+  currentMarketRate: number;
+  variancePerUnit: number;
+  variancePct: number;
+  labourComponentRate: number;
+  materialComponentRate: number;
+  machineryComponentRate: number;
+  overheadProfitPct: number;
+  finalAnalyzedRate: number;
+  status: 'Profitable' | 'Tight Margin' | 'Loss Risk';
+  lastUpdated: string;
+}
+
+// 4. Work Order Module Interfaces
+export interface WorkOrder {
+  id: string;
+  workOrderNumber: string;
+  title: string;
+  clientName: string;
+  contractorName: string; // Subcontractor or Prime Contractor
+  orderType: 'Government Work Order' | 'Outward Subcontract' | 'Inward Subcontract';
+  value: number;
+  startDate: string;
+  completionDate: string;
+  status: 'Active' | 'Completed' | 'Pending Approval' | 'Suspended';
+  scopeOfWork: string;
+  paymentTerms: string;
+  retentionPct: number;
+  emdDeposited: number;
+}
+
+// 7. Machinery Management Module Interfaces
+export interface MachineryItem {
+  id: string;
+  machineCode: string;
+  name: string; // JCB 3DX, Vibratory Roller 10T, Hydraulic Excavator, Concrete Mixer
+  category: 'Earthmoving' | 'Compaction' | 'Paving & Concrete' | 'Lifting Crane' | 'Transport Truck';
+  ownership: 'Owned' | 'Rented';
+  rentalVendor?: string;
+  dailyRentalRate: number;
+  hourlyOperatorRate: number;
+  dieselConsumptionLitresPerHr: number;
+  totalOperatingHours: number;
+  currentSite: string;
+  status: 'Active Operating' | 'Under Maintenance' | 'Idle at Yard';
+}
+
+export interface MachineryLog {
+  id: string;
+  machineId: string;
+  machineName: string;
+  date: string;
+  projectId: string;
+  projectName: string;
+  operatingHours: number;
+  startMeterReading: number;
+  endMeterReading: number;
+  dieselFilledLitres: number;
+  fuelCost: number;
+  operatorSalary: number;
+  rentalExpense: number;
+  totalDailyExpense: number;
+  workDoneDescription: string;
+}
+
+// 8. Labour Management Module Interfaces
+export interface LabourWorker {
+  id: string;
+  workerName: string;
+  category: 'Mason (Kottan)' | 'Coolie (Mazdoor)' | 'Machine Operator' | 'Site Supervisor' | 'Carpenter / Barbender';
+  dailyWageRate: number;
+  phone: string;
+  assignedProject: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface LabourDisbursement {
+  id: string;
+  projectId: string;
+  projectName: string;
+  date: string;
+  masonsCount: number;
+  cooliesCount: number;
+  operatorsCount: number;
+  totalManpowerCount: number;
+  masonsWageTotal: number;
+  cooliesWageTotal: number;
+  totalDisbursementAmount: number;
+  paymentMode: 'Cash' | 'Bank Transfer / UPI';
+  supervisorInCharge: string;
+  remarks?: string;
+}
+
+// 10. Company Filing Management Module Interfaces
+export interface CompanyFilingDoc {
+  id: string;
+  documentTitle: string;
+  documentCategory: 'Government License' | 'Tax Certificate (GST/PAN)' | 'PWD / NHAI Registration' | 'Vehicle RC Book' | 'Environmental Clearance';
+  referenceNumber: string;
+  issuingAuthority: string;
+  issueDate: string;
+  expiryDate: string;
+  renewalCycleYears: number; // e.g. 3 or 5 years
+  daysUntilExpiry: number;
+  status: 'Valid Active' | 'Renewal Due Soon' | 'Expired';
+  fileUrl?: string;
+}
+
+// 11. Work Experience Certificate Module Interfaces
+export interface WorkExperienceCertificate {
+  id: string;
+  certificateNumber: string;
+  projectName: string;
+  issuingDepartment: string;
+  clientAuthority: string; // Executive Engineer / Project Director
+  contractValue: number;
+  actualCompletedValue: number;
+  commencementDate: string;
+  completionDate: string;
+  financialYear: '2021-2022' | '2022-2023' | '2023-2024' | '2024-2025' | '2025-2026';
+  qualityRating: 'Satisfactory' | 'Very Good' | 'Outstanding';
+  certificateFileUrl?: string;
+  isPast5Years: boolean;
+}

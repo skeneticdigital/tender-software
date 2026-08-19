@@ -6,14 +6,21 @@ import { Sidebar } from './components/layout/Sidebar';
 // Pages
 import { Dashboard } from './pages/Dashboard';
 import { TenderList } from './pages/TenderList';
+import { EstimateModule } from './pages/EstimateModule';
+import { RateAnalysisModule } from './pages/RateAnalysisModule';
+import { WorkOrderModule } from './pages/WorkOrderModule';
 import { EmdDashboard } from './pages/EmdDashboard';
 import { ProjectList } from './pages/ProjectList';
 import { ProjectDetails } from './pages/ProjectDetails';
 import { MaterialMaster } from './pages/MaterialMaster';
 import { InventoryDashboard } from './pages/InventoryDashboard';
+import { MachineryModule } from './pages/MachineryModule';
+import { LabourModule } from './pages/LabourModule';
 import { BillingDashboard } from './pages/BillingDashboard';
 import { PaymentTracking } from './pages/PaymentTracking';
 import { RetentionDashboard } from './pages/RetentionDashboard';
+import { CompanyFilingModule } from './pages/CompanyFilingModule';
+import { CertificateModule } from './pages/CertificateModule';
 import { ReportsHub } from './pages/ReportsHub';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { UserManagement } from './pages/UserManagement';
@@ -79,6 +86,18 @@ const AppContent: React.FC = () => {
               />
             )}
 
+            {activeTab === 'estimates' && (
+              <EstimateModule />
+            )}
+
+            {activeTab === 'rate-analysis' && (
+              <RateAnalysisModule />
+            )}
+
+            {activeTab === 'work-orders' && (
+              <WorkOrderModule />
+            )}
+
             {activeTab === 'emd' && (
               <EmdDashboard />
             )}
@@ -103,6 +122,14 @@ const AppContent: React.FC = () => {
               <InventoryDashboard />
             )}
 
+            {activeTab === 'machinery' && (
+              <MachineryModule />
+            )}
+
+            {activeTab === 'labour' && (
+              <LabourModule />
+            )}
+
             {activeTab === 'billing' && (
               <BillingDashboard />
             )}
@@ -113,6 +140,14 @@ const AppContent: React.FC = () => {
 
             {activeTab === 'retention' && (
               <RetentionDashboard />
+            )}
+
+            {activeTab === 'company-filings' && (
+              <CompanyFilingModule />
+            )}
+
+            {activeTab === 'certificates' && (
+              <CertificateModule />
             )}
 
             {activeTab === 'reports' && (
