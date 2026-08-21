@@ -164,6 +164,7 @@ export const WorkOrderModule: React.FC = () => {
                 <th className="px-4 py-3.5">Contract Type</th>
                 <th className="px-4 py-3.5">Client / Subcontractor</th>
                 <th className="px-4 py-3.5 text-right">Contract Value</th>
+                <th className="px-4 py-3.5 text-center">WO Document</th>
                 <th className="px-4 py-3.5">Start Date</th>
                 <th className="px-4 py-3.5">Completion Date</th>
                 <th className="px-4 py-3.5">Status</th>
@@ -172,9 +173,9 @@ export const WorkOrderModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Loading work orders...</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading work orders...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">No work order contracts found.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No work order contracts found.</td></tr>
               ) : (
                 filtered.map((wo) => (
                   <tr key={wo.id} className="hover:bg-slate-50">
@@ -195,6 +196,34 @@ export const WorkOrderModule: React.FC = () => {
                       <div className="text-[10px] text-slate-500">{wo.contractorName}</div>
                     </td>
                     <td className="px-4 py-3.5 text-right font-black text-blue-900 text-sm">{formatINR(wo.value)}</td>
+                    <td className="px-4 py-3.5 text-center">
+                      {wo.workOrderDoc ? (
+                        <a
+                          href={wo.workOrderDoc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[11px] font-bold"
+                        >
+                          📄 WO Doc (PDF)
+                        </a>
+                      ) : (
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
+                          + Attach Doc
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const dummyUrl = URL.createObjectURL(file);
+                                setWorkOrders(prev => prev.map(x => x.id === wo.id ? { ...x, workOrderDoc: dummyUrl } : x));
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </td>
                     <td className="px-4 py-3.5">{wo.startDate}</td>
                     <td className="px-4 py-3.5 font-semibold text-slate-800">{wo.completionDate}</td>
                     <td className="px-4 py-3.5">

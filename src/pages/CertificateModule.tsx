@@ -104,19 +104,29 @@ export const CertificateModule: React.FC = () => {
     .filter(c => c.isPast5Years)
     .reduce((acc, c) => acc + c.actualCompletedValue, 0);
 
-  const filtered = certs.filter(c =>
-    c.projectName.toLowerCase().includes(search.toLowerCase()) ||
-    c.certificateNumber.toLowerCase().includes(search.toLowerCase()) ||
-    c.issuingDepartment.toLowerCase().includes(search.toLowerCase())
-  );
+  const [filterDate, setFilterDate] = useState('');
+  const [filterMonth, setFilterMonth] = useState('');
+  const [filterYear, setFilterYear] = useState('');
+
+  const filtered = certs.filter(c => {
+    const matchesSearch = c.projectName.toLowerCase().includes(search.toLowerCase()) ||
+      c.certificateNumber.toLowerCase().includes(search.toLowerCase()) ||
+      c.issuingDepartment.toLowerCase().includes(search.toLowerCase());
+
+    const matchesDate = !filterDate || c.completionDate === filterDate;
+    const matchesMonth = !filterMonth || c.completionDate?.substring(5, 7) === filterMonth;
+    const matchesYear = !filterYear || c.completionDate?.substring(0, 4) === filterYear;
+
+    return matchesSearch && matchesDate && matchesMonth && matchesYear;
+  });
 
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
       {/* Header Banner */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Work Experience Certificate Management</h1>
-          <p className="text-xs text-slate-500 mt-1">Official government contract completion certificates covering the past 5 financial years for tender qualification eligibility</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Work Experience Certificate Vault</h1>
+          <p className="text-xs text-slate-500 mt-1">Archive past completed contract completion certificates, client evaluation ratings & 5-year technical turnover eligibility</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right bg-blue-50 px-4 py-2 rounded-xl border border-blue-200">
@@ -133,8 +143,8 @@ export const CertificateModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+      {/* Filter Bar with Date, Month, Year filters */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -144,6 +154,65 @@ export const CertificateModule: React.FC = () => {
             placeholder="Search completed projects or certificate numbers..."
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        {/* Date, Month, Year Quick Filters */}
+        <div className="flex items-center gap-2">
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase">Exact Date</label>
+            <input
+              type="date"
+              value={filterDate}
+              onChange={(e) => setFilterDate(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase">Month</label>
+            <select
+              value={filterMonth}
+              onChange={(e) => setFilterMonth(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700"
+            >
+              <option value="">All Months</option>
+              <option value="01">Jan</option>
+              <option value="02">Feb</option>
+              <option value="03">Mar</option>
+              <option value="04">Apr</option>
+              <option value="05">May</option>
+              <option value="06">Jun</option>
+              <option value="07">Jul</option>
+              <option value="08">Aug</option>
+              <option value="09">Sep</option>
+              <option value="10">Oct</option>
+              <option value="11">Nov</option>
+              <option value="12">Dec</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase">Year</label>
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700"
+            >
+              <option value="">All Years</option>
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+            </select>
+          </div>
+          {(filterDate || filterMonth || filterYear) && (
+            <button
+              onClick={() => { setFilterDate(''); setFilterMonth(''); setFilterYear(''); }}
+              className="mt-4 px-2 py-1 text-xs font-bold text-rose-600 hover:underline"
+            >
+              Clear Filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -156,6 +225,7 @@ export const CertificateModule: React.FC = () => {
                 <th className="px-4 py-3.5">Cert Number & Completed Project</th>
                 <th className="px-4 py-3.5">Issuing Government Dept</th>
                 <th className="px-4 py-3.5 text-right">Completed Value</th>
+                <th className="px-4 py-3.5 text-center">Certificate Doc</th>
                 <th className="px-4 py-3.5">Financial Year</th>
                 <th className="px-4 py-3.5">Completion Date</th>
                 <th className="px-4 py-3.5">Quality Rating</th>
@@ -165,9 +235,9 @@ export const CertificateModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Loading experience certificates...</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading experience certificates...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">No work experience certificates recorded.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No work experience certificates recorded.</td></tr>
               ) : (
                 filtered.map((cert) => (
                   <tr key={cert.id} className="hover:bg-slate-50">
@@ -180,6 +250,34 @@ export const CertificateModule: React.FC = () => {
                       <div className="text-[10px] text-slate-500">{cert.clientAuthority}</div>
                     </td>
                     <td className="px-4 py-3.5 text-right font-black text-emerald-800 text-sm">{formatINR(cert.actualCompletedValue)}</td>
+                    <td className="px-4 py-3.5 text-center">
+                      {(cert as any).certificateDocUrl ? (
+                        <a
+                          href={(cert as any).certificateDocUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold"
+                        >
+                          📄 View Cert (PDF)
+                        </a>
+                      ) : (
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
+                          + Upload Cert
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const dummyUrl = URL.createObjectURL(file);
+                                setCerts(prev => prev.map(x => x.id === cert.id ? { ...x, certificateDocUrl: dummyUrl } : x));
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </td>
                     <td className="px-4 py-3.5 font-bold text-slate-700">{cert.financialYear}</td>
                     <td className="px-4 py-3.5 font-medium text-slate-800">{cert.completionDate}</td>
                     <td className="px-4 py-3.5">

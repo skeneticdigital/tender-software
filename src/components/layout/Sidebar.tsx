@@ -31,7 +31,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => 
     { id: 'billing', label: 'Billing Management', icon: IndianRupee, roles: ['*'] },
     { id: 'emd', label: 'EMDs & Deposits', icon: Landmark, roles: ['*'] },
     { id: 'payments', label: 'Payment Tracking', icon: CreditCard, roles: ['*'] },
-    { id: 'retention', label: 'Retention Money', icon: ShieldAlert, roles: ['*'] },
+    { id: 'retention', label: 'Annual Maintenance', icon: ShieldAlert, roles: ['*'] },
     { id: 'company-filings', label: 'Company Filings', icon: Building2, roles: ['*'] },
     { id: 'certificates', label: 'Experience Certs', icon: Award, roles: ['*'] },
     // System Utilities

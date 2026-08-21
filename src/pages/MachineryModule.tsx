@@ -218,6 +218,8 @@ export const MachineryModule: React.FC = () => {
                   <th className="px-4 py-3.5">Machine Code & Name</th>
                   <th className="px-4 py-3.5">Category</th>
                   <th className="px-4 py-3.5">Ownership</th>
+                  <th className="px-4 py-3.5">Deployed Project</th>
+                  <th className="px-4 py-3.5">Date Added</th>
                   <th className="px-4 py-3.5 text-right">Operating Hours</th>
                   <th className="px-4 py-3.5 text-right">Fuel Consumption</th>
                   <th className="px-4 py-3.5 text-right">Operator Rate</th>
@@ -228,9 +230,9 @@ export const MachineryModule: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {loading ? (
-                  <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading machinery fleet...</td></tr>
+                  <tr><td colSpan={11} className="p-8 text-center text-slate-400">Loading machinery fleet...</td></tr>
                 ) : filteredFleet.length === 0 ? (
-                  <tr><td colSpan={9} className="p-8 text-center text-slate-400">No machinery items registered.</td></tr>
+                  <tr><td colSpan={11} className="p-8 text-center text-slate-400">No machinery items registered.</td></tr>
                 ) : (
                   filteredFleet.map((mac) => (
                     <tr key={mac.id} className="hover:bg-slate-50">
@@ -243,6 +245,12 @@ export const MachineryModule: React.FC = () => {
                         <Badge variant={mac.ownership === 'Owned' ? 'success' : 'purple'}>
                           {mac.ownership} {mac.rentalVendor ? `(${mac.rentalVendor})` : ''}
                         </Badge>
+                      </td>
+                      <td className="px-4 py-3.5 font-bold text-blue-900">
+                        {mac.projectName || 'Madurai Ring Road Project'}
+                      </td>
+                      <td className="px-4 py-3.5 font-mono text-slate-600">
+                        {mac.dateAdded || '2026-08-21'}
                       </td>
                       <td className="px-4 py-3.5 text-right font-black text-blue-900 text-sm">{mac.totalOperatingHours} hrs</td>
                       <td className="px-4 py-3.5 text-right font-bold text-amber-700">{mac.dieselConsumptionLitresPerHr} L/hr</td>

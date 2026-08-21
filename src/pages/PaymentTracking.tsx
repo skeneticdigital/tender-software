@@ -9,6 +9,7 @@ export const PaymentTracking: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Yesterday' | 'Tomorrow' | 'Month'>('All');
 
   // Modal State (Add & Edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -101,11 +102,24 @@ export const PaymentTracking: React.FC = () => {
     setIsModalOpen(false);
   };
 
-  const filtered = payments.filter(p =>
-    p.billNumber.toLowerCase().includes(search.toLowerCase()) ||
-    p.projectName.toLowerCase().includes(search.toLowerCase()) ||
-    p.clientName.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = payments.filter(p => {
+    const matchesSearch = p.billNumber.toLowerCase().includes(search.toLowerCase()) ||
+      p.projectName.toLowerCase().includes(search.toLowerCase()) ||
+      p.clientName.toLowerCase().includes(search.toLowerCase());
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const yesterdayDate = new Date(); yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+    const tomorrowDate = new Date(); tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+    const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+
+    if (dateFilter === 'Today') return matchesSearch && p.paymentDate === todayStr;
+    if (dateFilter === 'Yesterday') return matchesSearch && p.paymentDate === yesterdayStr;
+    if (dateFilter === 'Tomorrow') return matchesSearch && p.paymentDate === tomorrowStr;
+    if (dateFilter === 'Month') return matchesSearch && p.paymentDate?.startsWith(todayStr.substring(0, 7));
+
+    return matchesSearch;
+  });
 
   return (
     <div className="space-y-6 animate-fadeIn pb-8">
@@ -124,8 +138,8 @@ export const PaymentTracking: React.FC = () => {
         </button>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+      {/* Filter Bar with Top Menu Options (Today, Yesterday, Tomorrow) */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="relative w-full max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -135,6 +149,26 @@ export const PaymentTracking: React.FC = () => {
             placeholder="Search payments by bill number, project or client..."
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+        </div>
+
+        {/* Top Quick Date Menu Buttons */}
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full md:w-auto overflow-x-auto">
+          {(['All', 'Today', 'Yesterday', 'Tomorrow', 'Month'] as const).map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setDateFilter(filter)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                dateFilter === filter
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
+            >
+              {filter === 'All' ? '📅 All Dates' :
+               filter === 'Today' ? '☀️ Today' :
+               filter === 'Yesterday' ? '⏪ Yesterday' :
+               filter === 'Tomorrow' ? '⏩ Tomorrow' : '🗓️ This Month'}
+            </button>
+          ))}
         </div>
       </div>
 

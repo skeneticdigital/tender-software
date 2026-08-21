@@ -123,6 +123,8 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
                 <th className="px-4 py-3.5">Submission Date</th>
                 <th className="px-4 py-3.5 text-right">Estimated Value</th>
                 <th className="px-4 py-3.5 text-right">Quoted Bid</th>
+                <th className="px-4 py-3.5 text-center">Paid Challan Doc</th>
+                <th className="px-4 py-3.5 text-center">Tender Notice Doc</th>
                 <th className="px-4 py-3.5 text-right">Quote Variance</th>
                 <th className="px-4 py-3.5">Status</th>
                 <th className="px-4 py-3.5 text-center">Action</th>
@@ -131,11 +133,11 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-slate-400">Loading tenders...</td>
+                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400">Loading tenders...</td>
                 </tr>
               ) : tenders.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-slate-400">No tenders found matching criteria.</td>
+                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400">No tenders found matching criteria.</td>
                 </tr>
               ) : (
                 tenders.map((t) => (
@@ -167,6 +169,66 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
 
                     <td className="px-4 py-3.5 text-right font-bold text-blue-700">
                       {formatLakhsCr(t.quotedAmount)}
+                    </td>
+
+                    {/* Column 1: Paid Challan */}
+                    <td className="px-4 py-3.5 text-center">
+                      {t.paidChallanDoc ? (
+                        <a
+                          href={t.paidChallanDoc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold hover:bg-emerald-100"
+                        >
+                          📄 Paid Fee (PDF)
+                        </a>
+                      ) : (
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
+                          + Add Challan
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const dummyUrl = URL.createObjectURL(file);
+                                setTenders(prev => prev.map(x => x.id === t.id ? { ...x, paidChallanDoc: dummyUrl } : x));
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </td>
+
+                    {/* Column 2: Tender Notice */}
+                    <td className="px-4 py-3.5 text-center">
+                      {t.tenderNoticeDoc ? (
+                        <a
+                          href={t.tenderNoticeDoc}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg text-[11px] font-bold hover:bg-blue-100"
+                        >
+                          📋 NIT Notice (PDF)
+                        </a>
+                      ) : (
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
+                          + Add Notice
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const dummyUrl = URL.createObjectURL(file);
+                                setTenders(prev => prev.map(x => x.id === t.id ? { ...x, tenderNoticeDoc: dummyUrl } : x));
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
                     </td>
 
                     <td className="px-4 py-3.5 text-right">

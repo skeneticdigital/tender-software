@@ -300,6 +300,77 @@ export const InventoryDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Requirement 4 & 5: Project Material Spending & Consumption Breakdown */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-black text-slate-900">Project-wise Material Expenditure & Consumption Cost</h3>
+            <p className="text-xs text-slate-500 mt-0.5">Track materials spent, project names & calculated expenditure per project</p>
+          </div>
+          <span className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-xs font-bold">
+            Project-Wise Analytics
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs text-slate-700">
+            <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
+              <tr>
+                <th className="px-4 py-3.5">Project Name</th>
+                <th className="px-4 py-3.5">Material Name & Category</th>
+                <th className="px-4 py-3.5 text-right">Dispatched Qty</th>
+                <th className="px-4 py-3.5 text-right">Consumed Qty</th>
+                <th className="px-4 py-3.5 text-right">Est. Unit Rate (₹)</th>
+                <th className="px-4 py-3.5 text-right">Project Spent Cost (₹)</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-medium">
+              {projects.length === 0 ? (
+                <tr><td colSpan={6} className="p-6 text-center text-slate-400">Loading project expenditure breakdown...</td></tr>
+              ) : (
+                projects.map((proj, pIdx) => {
+                  // Mock material usage linked to each project
+                  const projMats = [
+                    { matName: 'OPC 53 Grade Cement', category: 'Cement & Concrete', unit: 'Bags', dispatched: 1200 + (pIdx * 200), consumed: 1150 + (pIdx * 180), unitRate: 380 },
+                    { matName: 'TMT Steel Bars 12mm Fe550D', category: 'Steel & Metals', unit: 'MT', dispatched: 45 + (pIdx * 10), consumed: 40 + (pIdx * 8), unitRate: 64500 },
+                    { matName: 'Manufactured Sand (M-Sand)', category: 'Aggregates & Sand', unit: 'Cu.M', dispatched: 350 + (pIdx * 50), consumed: 320 + (pIdx * 40), unitRate: 1450 }
+                  ];
+
+                  const totalProjectSpend = projMats.reduce((sum, item) => sum + (item.consumed * item.unitRate), 0);
+
+                  return (
+                    <React.Fragment key={proj.id}>
+                      <tr className="bg-blue-50/50 border-t-2 border-slate-200">
+                        <td colSpan={5} className="px-4 py-2.5 font-black text-slate-900 text-sm">
+                          🏗️ {proj.projectName} <span className="text-xs font-normal text-slate-500">({proj.client})</span>
+                        </td>
+                        <td className="px-4 py-2.5 text-right font-black text-blue-900 text-sm">
+                          Total Material Spent: {formatINR(totalProjectSpend)}
+                        </td>
+                      </tr>
+                      {projMats.map((m, mIdx) => {
+                        const matSpentCost = m.consumed * m.unitRate;
+                        return (
+                          <tr key={mIdx} className="hover:bg-slate-50/80">
+                            <td className="px-4 py-2.5 font-semibold text-slate-500 pl-8">↳ {proj.contractNumber}</td>
+                            <td className="px-4 py-2.5 font-bold text-slate-800">
+                              {m.matName} <span className="text-[10px] font-normal text-slate-400">({m.category})</span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-semibold text-slate-700">{m.dispatched} {m.unit}</td>
+                            <td className="px-4 py-2.5 text-right font-bold text-emerald-700">{m.consumed} {m.unit}</td>
+                            <td className="px-4 py-2.5 text-right font-medium text-slate-600">{formatINR(m.unitRate)} / {m.unit}</td>
+                            <td className="px-4 py-2.5 text-right font-black text-emerald-800">{formatINR(matSpentCost)}</td>
+                          </tr>
+                        );
+                      })}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Modal 1: Add New Inventory Material */}
       <Modal
         isOpen={isAddOpen}

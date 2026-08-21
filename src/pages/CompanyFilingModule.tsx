@@ -191,6 +191,7 @@ export const CompanyFilingModule: React.FC = () => {
                 <th className="px-4 py-3.5">Document Title & Ref</th>
                 <th className="px-4 py-3.5">Category</th>
                 <th className="px-4 py-3.5">Issuing Authority</th>
+                <th className="px-4 py-3.5 text-center">Filed Document</th>
                 <th className="px-4 py-3.5">Issue Date</th>
                 <th className="px-4 py-3.5">Expiry Date</th>
                 <th className="px-4 py-3.5">Cycle</th>
@@ -200,9 +201,9 @@ export const CompanyFilingModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Loading document vault...</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading document vault...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">No company filing documents archived.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No company filing documents archived.</td></tr>
               ) : (
                 filtered.map((d) => (
                   <tr key={d.id} className="hover:bg-slate-50">
@@ -212,9 +213,37 @@ export const CompanyFilingModule: React.FC = () => {
                     </td>
                     <td className="px-4 py-3.5 font-semibold text-slate-700">{d.documentCategory}</td>
                     <td className="px-4 py-3.5 font-medium text-slate-800">{d.issuingAuthority}</td>
+                    <td className="px-4 py-3.5 text-center">
+                      {d.documentFileUrl || d.fileUrl ? (
+                        <a
+                          href={d.documentFileUrl || d.fileUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold"
+                        >
+                          📄 Certificate (PDF)
+                        </a>
+                      ) : (
+                        <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
+                          + Upload Doc
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx,.jpg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const dummyUrl = URL.createObjectURL(file);
+                                setDocs(prev => prev.map(x => x.id === d.id ? { ...x, documentFileUrl: dummyUrl } : x));
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </td>
                     <td className="px-4 py-3.5">{d.issueDate}</td>
                     <td className="px-4 py-3.5 font-bold text-slate-900">{d.expiryDate}</td>
-                    <td className="px-4 py-3.5 font-bold text-blue-700">{d.renewalCycleYears} Years</td>
+                    <td className="px-4 py-3.5 font-bold text-blue-700">{d.renewalCycleYears || 5} Years</td>
                     <td className="px-4 py-3.5">
                       <Badge variant={
                         d.status === 'Valid Active' ? 'success' :

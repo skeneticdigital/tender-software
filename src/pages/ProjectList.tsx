@@ -173,7 +173,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
                 <th className="px-6 py-4">Contract No</th>
                 <th className="px-6 py-4">Project Details</th>
                 <th className="px-6 py-4">Client & Location</th>
-                <th className="px-6 py-4 text-right">Value (₹)</th>
+                <th className="px-6 py-4 text-right">Estimate Total</th>
+                <th className="px-6 py-4">Budget Spent & Balance (%)</th>
                 <th className="px-6 py-4">Progress</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -182,32 +183,53 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-400">Loading active projects...</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">Loading active projects...</td>
                 </tr>
               ) : projects.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-slate-400">No projects found matching criteria.</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">No projects found matching criteria.</td>
                 </tr>
               ) : (
-                projects.map((p) => (
-                  <tr 
-                    key={p.id} 
-                    className="hover:bg-slate-50 transition-colors cursor-pointer group"
-                    onClick={() => onSelectProject(p.id)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-xs font-bold text-blue-600">{p.contractNumber}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-semibold text-slate-900 max-w-xs truncate">{p.projectName}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-xs text-slate-500">{p.client}</div>
-                      <div className="text-xs text-slate-400">{p.location}</div>
-                    </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap font-bold text-slate-700">
-                      {formatLakhsCr(p.contractValue)}
-                    </td>
+                projects.map((p) => {
+                  const estimateVal = p.contractValue || 1000000;
+                  const spent = p.totalBilled || Math.round(estimateVal * (p.completionPercentage / 100));
+                  const spentPct = Math.min(100, Math.max(0, (spent / estimateVal) * 100));
+                  const remaining = Math.max(0, estimateVal - spent);
+                  const remainingPct = 100 - spentPct;
+
+                  return (
+                    <tr 
+                      key={p.id} 
+                      className="hover:bg-slate-50 transition-colors cursor-pointer group"
+                      onClick={() => onSelectProject(p.id)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-xs font-bold text-blue-600">{p.contractNumber}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-slate-900 max-w-xs truncate">{p.projectName}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="text-xs text-slate-500">{p.client}</div>
+                        <div className="text-xs text-slate-400">{p.location}</div>
+                      </td>
+                      <td className="px-6 py-4 text-right whitespace-nowrap font-black text-slate-900">
+                        {formatLakhsCr(estimateVal)}
+                      </td>
+                      
+                      {/* Budget Spent % & Remaining Balance */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="space-y-1 text-xs">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-bold text-emerald-700">Spent: {formatLakhsCr(spent)} ({spentPct.toFixed(1)}%)</span>
+                            <span className="font-bold text-slate-500">Bal: {formatLakhsCr(remaining)} ({remainingPct.toFixed(1)}%)</span>
+                          </div>
+                          <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex">
+                            <div className="bg-emerald-500 h-full" style={{ width: `${spentPct}%` }} title={`Spent: ${spentPct.toFixed(1)}%`} />
+                            <div className="bg-blue-600 h-full opacity-60" style={{ width: `${remainingPct}%` }} title={`Remaining: ${remainingPct.toFixed(1)}%`} />
+                          </div>
+                        </div>
+                      </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden w-24">
@@ -247,7 +269,8 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

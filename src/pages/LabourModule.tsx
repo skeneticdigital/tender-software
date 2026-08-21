@@ -203,8 +203,10 @@ export const LabourModule: React.FC = () => {
               <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
                 <tr>
                   <th className="px-4 py-3.5">Worker Name</th>
+                  <th className="px-4 py-3.5">Gender</th>
                   <th className="px-4 py-3.5">Skill Category</th>
                   <th className="px-4 py-3.5 text-right">Daily Wage Rate</th>
+                  <th className="px-4 py-3.5 text-right">Today Calculated Salary</th>
                   <th className="px-4 py-3.5">Phone Contact</th>
                   <th className="px-4 py-3.5">Assigned Site / Project</th>
                   <th className="px-4 py-3.5">Status</th>
@@ -213,27 +215,37 @@ export const LabourModule: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {loading ? (
-                  <tr><td colSpan={7} className="p-8 text-center text-slate-400">Loading worker roster...</td></tr>
+                  <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading worker roster...</td></tr>
                 ) : filteredWorkers.length === 0 ? (
-                  <tr><td colSpan={7} className="p-8 text-center text-slate-400">No worker profiles found.</td></tr>
+                  <tr><td colSpan={9} className="p-8 text-center text-slate-400">No worker profiles found.</td></tr>
                 ) : (
-                  filteredWorkers.map((w) => (
-                    <tr key={w.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3.5 font-bold text-slate-900">{w.workerName}</td>
-                      <td className="px-4 py-3.5 font-semibold text-slate-700">{w.category}</td>
-                      <td className="px-4 py-3.5 text-right font-black text-emerald-800 text-sm">{formatINR(w.dailyWageRate)}/day</td>
-                      <td className="px-4 py-3.5 font-mono text-slate-600">{w.phone}</td>
-                      <td className="px-4 py-3.5 font-medium text-slate-700">{w.assignedProject}</td>
-                      <td className="px-4 py-3.5">
-                        <Badge variant={w.status === 'Active' ? 'success' : 'default'}>{w.status}</Badge>
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <button
-                            onClick={() => handleOpenEditWorker(w)}
-                            className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
-                            title="Edit Worker Profile"
-                          >
+                  filteredWorkers.map((w) => {
+                    const todaySalary = w.dailyWageRate; // automatic calculated today salary
+                    return (
+                      <tr key={w.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3.5 font-bold text-slate-900">{w.workerName}</td>
+                        <td className="px-4 py-3.5 font-semibold text-slate-700">
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-bold">
+                            {w.gender || 'Male'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 font-semibold text-slate-700">{w.category}</td>
+                        <td className="px-4 py-3.5 text-right font-black text-emerald-800 text-sm">{formatINR(w.dailyWageRate)}/day</td>
+                        <td className="px-4 py-3.5 text-right font-black text-blue-900 text-sm">
+                          ⚡ {formatINR(todaySalary)}
+                        </td>
+                        <td className="px-4 py-3.5 font-mono text-slate-600">{w.phone}</td>
+                        <td className="px-4 py-3.5 font-bold text-blue-900">{w.assignedProject || 'Madurai Ring Road Project'}</td>
+                        <td className="px-4 py-3.5">
+                          <Badge variant={w.status === 'Active' ? 'success' : 'default'}>{w.status}</Badge>
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditWorker(w)}
+                              className="p-1.5 hover:bg-blue-50 text-blue-600 rounded transition-colors"
+                              title="Edit Worker Profile"
+                            >
                             <Pencil className="w-4 h-4" />
                           </button>
                           <button
@@ -248,7 +260,8 @@ export const LabourModule: React.FC = () => {
                         </div>
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>

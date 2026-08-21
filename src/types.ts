@@ -46,10 +46,11 @@ export interface Tender {
   remarks?: string;
   createdBy: string;
   createdAt: string;
-  updatedAt: string;
   quoteDiff?: number;
   quoteVariancePct?: number;
   awardDiff?: number;
+  paidChallanDoc?: string;
+  tenderNoticeDoc?: string;
 }
 
 export interface EmdTransaction {
@@ -86,7 +87,9 @@ export interface SecurityDeposit {
   refNumber: string;
   expectedReleaseDate: string;
   actualReleaseDate?: string;
-  status: 'Active' | 'Due Soon' | 'Released' | 'Overdue';
+  status: 'Active' | 'Due Soon' | 'Released' | 'Overdue' | 'Closed';
+  maintenanceChargeValue?: string; // e.g. "1 Year Maintenance", "2 Years", "3 Years"
+  closedStatus?: 'Active' | 'Closed';
   remarks?: string;
   createdAt: string;
   updatedAt: string;
@@ -430,6 +433,7 @@ export interface WorkOrder {
   paymentTerms: string;
   retentionPct: number;
   emdDeposited: number;
+  workOrderDoc?: string;
 }
 
 // 7. Machinery Management Module Interfaces
@@ -446,6 +450,8 @@ export interface MachineryItem {
   totalOperatingHours: number;
   currentSite: string;
   status: 'Active Operating' | 'Under Maintenance' | 'Idle at Yard';
+  dateAdded?: string;
+  projectName?: string;
 }
 
 export interface MachineryLog {
@@ -475,6 +481,7 @@ export interface LabourWorker {
   phone: string;
   assignedProject: string;
   status: 'Active' | 'Inactive';
+  gender?: 'Male' | 'Female' | 'Other';
 }
 
 export interface LabourDisbursement {
@@ -492,6 +499,9 @@ export interface LabourDisbursement {
   paymentMode: 'Cash' | 'Bank Transfer / UPI';
   supervisorInCharge: string;
   remarks?: string;
+  overtimeHours?: number;
+  todaySalaryCalculated?: number;
+  gender?: 'Male' | 'Female' | 'Other';
 }
 
 // 10. Company Filing Management Module Interfaces
@@ -507,6 +517,7 @@ export interface CompanyFilingDoc {
   daysUntilExpiry: number;
   status: 'Valid Active' | 'Renewal Due Soon' | 'Expired';
   fileUrl?: string;
+  documentFileUrl?: string;
 }
 
 // 11. Work Experience Certificate Module Interfaces
@@ -523,5 +534,6 @@ export interface WorkExperienceCertificate {
   financialYear: '2021-2022' | '2022-2023' | '2023-2024' | '2024-2025' | '2025-2026';
   qualityRating: 'Satisfactory' | 'Very Good' | 'Outstanding';
   certificateFileUrl?: string;
+  certificateDocUrl?: string;
   isPast5Years: boolean;
 }

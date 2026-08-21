@@ -142,17 +142,18 @@ export const EmdDashboard: React.FC = () => {
                   <th className="px-4 py-3.5">Tender & Client</th>
                   <th className="px-4 py-3.5">EMD Method / Ref</th>
                   <th className="px-4 py-3.5 text-right">EMD Amount</th>
-                  <th className="px-4 py-3.5">Payment Date</th>
+                  <th className="px-4 py-3.5">Maintenance Charge</th>
                   <th className="px-4 py-3.5">Expected Refund</th>
                   <th className="px-4 py-3.5">Refund Status</th>
+                  <th className="px-4 py-3.5">Deposit Status</th>
                   <th className="px-4 py-3.5 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {loading ? (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">Loading EMD records...</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Loading EMD records...</td></tr>
                 ) : emds.length === 0 ? (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">No EMD transactions found.</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">No EMD transactions found.</td></tr>
                 ) : (
                   emds.map((e) => (
                     <tr key={e.id} className="hover:bg-slate-50/80 transition-colors">
@@ -170,7 +171,12 @@ export const EmdDashboard: React.FC = () => {
                         {formatINR(e.emdAmount)}
                       </td>
 
-                      <td className="px-4 py-3.5">{e.paymentDate}</td>
+                      {/* Maintenance Charge */}
+                      <td className="px-4 py-3.5">
+                        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 rounded text-[11px] font-bold">
+                          {e.maintenanceChargeValue || '1 Year Maintenance'}
+                        </span>
+                      </td>
 
                       <td className="px-4 py-3.5">
                         <span className={`font-semibold ${
@@ -188,6 +194,22 @@ export const EmdDashboard: React.FC = () => {
                         }>
                           {e.refundStatus}
                         </Badge>
+                      </td>
+
+                      {/* Active / Closed status toggle */}
+                      <td className="px-4 py-3.5">
+                        <button
+                          onClick={() => {
+                            setEmds(prev => prev.map(x => x.id === e.id ? { ...x, closedStatus: x.closedStatus === 'Closed' ? 'Active' : 'Closed' } : x));
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-xs font-black transition-all ${
+                            e.closedStatus === 'Closed'
+                              ? 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                              : 'bg-emerald-500 text-white shadow-xs hover:bg-emerald-600'
+                          }`}
+                        >
+                          {e.closedStatus === 'Closed' ? '🔒 Closed (Received)' : '🟢 Active (Pending)'}
+                        </button>
                       </td>
 
                       <td className="px-4 py-3.5 text-center">
