@@ -339,6 +339,7 @@ export const EstimateModule: React.FC = () => {
                 <table className="w-full text-left text-xs text-slate-700">
                   <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
                     <tr>
+                      <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                       <th className="px-4 py-3.5">BOQ Item Code</th>
                       <th className="px-4 py-3.5">Work Description</th>
                       <th className="px-4 py-3.5 text-right">Qty & Unit</th>
@@ -351,8 +352,9 @@ export const EstimateModule: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-medium">
-                    {selectedEstimate.items.map((item) => (
+                    {selectedEstimate.items.map((item, index) => (
                       <tr key={item.id} className="hover:bg-slate-50">
+                        <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                         <td className="px-4 py-3.5 font-bold text-slate-900 font-mono">{item.code}</td>
                         <td className="px-4 py-3.5 font-semibold text-slate-800">{item.description}</td>
                         <td className="px-4 py-3.5 text-right font-bold text-slate-900">{item.quantity} {item.unit}</td>

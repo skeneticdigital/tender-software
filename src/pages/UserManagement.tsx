@@ -126,7 +126,8 @@ export const UserManagement: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
-                <th className="px-4 py-3.5">User Details</th>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
+                <th className="px-4 py-3.5">User Identity & Email</th>
                 <th className="px-4 py-3.5">Assigned Role Persona</th>
                 <th className="px-4 py-3.5">Department</th>
                 <th className="px-4 py-3.5">Status</th>
@@ -135,10 +136,11 @@ export const UserManagement: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={5} className="p-8 text-center text-slate-400">Loading users...</td></tr>
+                <tr><td colSpan={6} className="p-8 text-center text-slate-400">Loading users...</td></tr>
               ) : (
-                users.map((u) => (
+                users.map((u, index) => (
                   <tr key={u.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900">{u.name}</div>
                       <div className="text-[11px] text-slate-400">{u.email}</div>

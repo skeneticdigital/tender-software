@@ -222,6 +222,7 @@ export const CertificateModule: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Cert Number & Completed Project</th>
                 <th className="px-4 py-3.5">Issuing Government Dept</th>
                 <th className="px-4 py-3.5 text-right">Completed Value</th>
@@ -235,12 +236,13 @@ export const CertificateModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading experience certificates...</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-slate-400">Loading experience certificates...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No work experience certificates recorded.</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-slate-400">No work experience certificates recorded.</td></tr>
               ) : (
-                filtered.map((cert) => (
+                filtered.map((cert, index) => (
                   <tr key={cert.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900">{cert.projectName}</div>
                       <div className="text-[10px] text-slate-400 font-mono">{cert.certificateNumber}</div>
@@ -252,14 +254,24 @@ export const CertificateModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-right font-black text-emerald-800 text-sm">{formatINR(cert.actualCompletedValue)}</td>
                     <td className="px-4 py-3.5 text-center">
                       {(cert as any).certificateDocUrl ? (
-                        <a
-                          href={(cert as any).certificateDocUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold"
-                        >
-                          📄 View Cert (PDF)
-                        </a>
+                        <div className="inline-flex items-center gap-1">
+                          <a
+                            href={(cert as any).certificateDocUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold"
+                          >
+                            📄 View Cert (PDF)
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setCerts(prev => prev.map(x => x.id === cert.id ? { ...x, certificateDocUrl: undefined } : x))}
+                            className="p-1 hover:bg-rose-100 text-rose-600 rounded text-xs font-bold transition-colors"
+                            title="Delete Certificate Document"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       ) : (
                         <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
                           + Upload Cert

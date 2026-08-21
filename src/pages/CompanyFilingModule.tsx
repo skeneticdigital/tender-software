@@ -188,6 +188,7 @@ export const CompanyFilingModule: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Document Title & Ref</th>
                 <th className="px-4 py-3.5">Category</th>
                 <th className="px-4 py-3.5">Issuing Authority</th>
@@ -201,12 +202,13 @@ export const CompanyFilingModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading document vault...</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-slate-400">Loading document vault...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No company filing documents archived.</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-slate-400">No company filing documents archived.</td></tr>
               ) : (
-                filtered.map((d) => (
+                filtered.map((d, index) => (
                   <tr key={d.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900">{d.documentTitle}</div>
                       <div className="text-[10px] text-slate-400 font-mono">{d.referenceNumber}</div>
@@ -215,14 +217,24 @@ export const CompanyFilingModule: React.FC = () => {
                     <td className="px-4 py-3.5 font-medium text-slate-800">{d.issuingAuthority}</td>
                     <td className="px-4 py-3.5 text-center">
                       {d.documentFileUrl || d.fileUrl ? (
-                        <a
-                          href={d.documentFileUrl || d.fileUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold"
-                        >
-                          📄 Certificate (PDF)
-                        </a>
+                        <div className="inline-flex items-center gap-1">
+                          <a
+                            href={d.documentFileUrl || d.fileUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold"
+                          >
+                            📄 Certificate (PDF)
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setDocs(prev => prev.map(x => x.id === d.id ? { ...x, documentFileUrl: undefined, fileUrl: undefined } : x))}
+                            className="p-1 hover:bg-rose-100 text-rose-600 rounded text-xs font-bold transition-colors"
+                            title="Delete Document"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       ) : (
                         <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
                           + Upload Doc

@@ -215,6 +215,7 @@ export const MachineryModule: React.FC = () => {
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
                 <tr>
+                  <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                   <th className="px-4 py-3.5">Machine Code & Name</th>
                   <th className="px-4 py-3.5">Category</th>
                   <th className="px-4 py-3.5">Ownership</th>
@@ -230,12 +231,13 @@ export const MachineryModule: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {loading ? (
-                  <tr><td colSpan={11} className="p-8 text-center text-slate-400">Loading machinery fleet...</td></tr>
+                  <tr><td colSpan={12} className="p-8 text-center text-slate-400">Loading machinery fleet...</td></tr>
                 ) : filteredFleet.length === 0 ? (
-                  <tr><td colSpan={11} className="p-8 text-center text-slate-400">No machinery items registered.</td></tr>
+                  <tr><td colSpan={12} className="p-8 text-center text-slate-400">No machinery items registered.</td></tr>
                 ) : (
-                  filteredFleet.map((mac) => (
+                  filteredFleet.map((mac, index) => (
                     <tr key={mac.id} className="hover:bg-slate-50">
+                      <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                       <td className="px-4 py-3.5">
                         <div className="font-bold text-slate-900">{mac.name}</div>
                         <div className="text-[10px] text-slate-400 font-mono">{mac.machineCode}</div>

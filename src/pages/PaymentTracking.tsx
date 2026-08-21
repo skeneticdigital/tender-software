@@ -178,6 +178,7 @@ export const PaymentTracking: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Bill Number & Project</th>
                 <th className="px-4 py-3.5">Client Department</th>
                 <th className="px-4 py-3.5 text-right">Amount Received</th>
@@ -189,12 +190,13 @@ export const PaymentTracking: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={7} className="p-8 text-center text-slate-400">Loading payment receipts...</td></tr>
+                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Loading payment receipts...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={7} className="p-8 text-center text-slate-400">No payment receipts logged.</td></tr>
+                <tr><td colSpan={8} className="p-8 text-center text-slate-400">No payment receipts logged.</td></tr>
               ) : (
-                filtered.map((p) => (
+                filtered.map((p, index) => (
                   <tr key={p.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900 font-mono">{p.billNumber}</div>
                       <div className="text-[10px] text-slate-500">{p.projectName}</div>

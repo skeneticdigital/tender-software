@@ -139,6 +139,7 @@ export const EmdDashboard: React.FC = () => {
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <tr>
+                  <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                   <th className="px-4 py-3.5">Tender & Client</th>
                   <th className="px-4 py-3.5">EMD Method / Ref</th>
                   <th className="px-4 py-3.5 text-right">EMD Amount</th>
@@ -151,12 +152,13 @@ export const EmdDashboard: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {loading ? (
-                  <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Loading EMD records...</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">Loading EMD records...</td></tr>
                 ) : emds.length === 0 ? (
-                  <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">No EMD transactions found.</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">No EMD transactions found.</td></tr>
                 ) : (
-                  emds.map((e) => (
+                  emds.map((e, index) => (
                     <tr key={e.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                       <td className="px-4 py-3.5">
                         <div className="font-bold text-slate-900">{e.refNumber}</div>
                         <div className="text-[11px] text-slate-500">{e.clientName}</div>
@@ -255,6 +257,7 @@ export const EmdDashboard: React.FC = () => {
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                 <tr>
+                  <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                   <th className="px-4 py-3.5">Project Name</th>
                   <th className="px-4 py-3.5">Guarantee Type</th>
                   <th className="px-4 py-3.5 text-right">Amount</th>
@@ -266,8 +269,9 @@ export const EmdDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {sds.map((s) => (
+                {sds.map((s, index) => (
                   <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5 font-bold text-slate-900">{s.projectName}</td>
                     <td className="px-4 py-3.5 font-semibold text-slate-800">{s.depositType}</td>
                     <td className="px-4 py-3.5 text-right font-bold text-slate-900">{formatINR(s.amount)}</td>

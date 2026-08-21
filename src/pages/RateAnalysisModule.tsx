@@ -165,6 +165,7 @@ export const RateAnalysisModule: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Item Code & Description</th>
                 <th className="px-4 py-3.5 text-right">Unit</th>
                 <th className="px-4 py-3.5 text-right">Tender Est. Rate</th>
@@ -177,12 +178,13 @@ export const RateAnalysisModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Loading rate analysis...</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading rate analysis...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">No rate analysis records found.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No rate analysis records found.</td></tr>
               ) : (
-                filtered.map((item) => (
+                filtered.map((item, index) => (
                   <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900">{item.itemName}</div>
                       <div className="text-[10px] text-slate-400 font-mono">{item.itemCode}</div>

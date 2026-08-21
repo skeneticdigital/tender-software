@@ -231,6 +231,7 @@ export const InventoryDashboard: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Material Name & Code</th>
                 <th className="px-4 py-3.5">Category</th>
                 <th className="px-4 py-3.5 text-right">Central Yard Stock</th>
@@ -243,12 +244,13 @@ export const InventoryDashboard: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">Loading inventory stock...</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading inventory stock...</td></tr>
               ) : inventory.length === 0 ? (
-                <tr><td colSpan={8} className="p-8 text-center text-slate-400">No inventory materials recorded.</td></tr>
+                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No inventory materials recorded.</td></tr>
               ) : (
-                inventory.map((item) => (
+                inventory.map((item, index) => (
                   <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5 font-bold text-slate-900">
                       <div>{item.materialName || item.name}</div>
                       <div className="text-[10px] text-slate-400 font-mono">{item.materialCode || item.code}</div>

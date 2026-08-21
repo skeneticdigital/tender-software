@@ -117,6 +117,7 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Ref No & Tender Name</th>
                 <th className="px-4 py-3.5">Client & Dept</th>
                 <th className="px-4 py-3.5">Category</th>
@@ -133,15 +134,16 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400">Loading tenders...</td>
+                  <td colSpan={12} className="px-4 py-8 text-center text-slate-400">Loading tenders...</td>
                 </tr>
               ) : tenders.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-slate-400">No tenders found matching criteria.</td>
+                  <td colSpan={12} className="px-4 py-8 text-center text-slate-400">No tenders found matching criteria.</td>
                 </tr>
               ) : (
-                tenders.map((t) => (
+                tenders.map((t, index) => (
                   <tr key={t.id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900">{t.refNumber}</div>
                       <div className="text-[11px] text-slate-500 line-clamp-1 max-w-xs">{t.name}</div>
@@ -171,17 +173,27 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
                       {formatLakhsCr(t.quotedAmount)}
                     </td>
 
-                    {/* Column 1: Paid Challan */}
+                    {/* Column 1: Paid Challan with Delete Document Button */}
                     <td className="px-4 py-3.5 text-center">
                       {t.paidChallanDoc ? (
-                        <a
-                          href={t.paidChallanDoc}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold hover:bg-emerald-100"
-                        >
-                          📄 Paid Fee (PDF)
-                        </a>
+                        <div className="inline-flex items-center gap-1">
+                          <a
+                            href={t.paidChallanDoc}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold hover:bg-emerald-100"
+                          >
+                            📄 Paid Fee (PDF)
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setTenders(prev => prev.map(x => x.id === t.id ? { ...x, paidChallanDoc: undefined } : x))}
+                            className="p-1 hover:bg-rose-100 text-rose-600 rounded text-xs font-bold transition-colors"
+                            title="Delete Paid Challan Document"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       ) : (
                         <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
                           + Add Challan
@@ -201,17 +213,27 @@ export const TenderList: React.FC<TenderListProps> = ({ onNavigateTab, selectedT
                       )}
                     </td>
 
-                    {/* Column 2: Tender Notice */}
+                    {/* Column 2: Tender Notice with Delete Document Button */}
                     <td className="px-4 py-3.5 text-center">
                       {t.tenderNoticeDoc ? (
-                        <a
-                          href={t.tenderNoticeDoc}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg text-[11px] font-bold hover:bg-blue-100"
-                        >
-                          📋 NIT Notice (PDF)
-                        </a>
+                        <div className="inline-flex items-center gap-1">
+                          <a
+                            href={t.tenderNoticeDoc}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-lg text-[11px] font-bold hover:bg-blue-100"
+                          >
+                            📋 NIT Notice (PDF)
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setTenders(prev => prev.map(x => x.id === t.id ? { ...x, tenderNoticeDoc: undefined } : x))}
+                            className="p-1 hover:bg-rose-100 text-rose-600 rounded text-xs font-bold transition-colors"
+                            title="Delete Tender Notice Document"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       ) : (
                         <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-1 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
                           + Add Notice

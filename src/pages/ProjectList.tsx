@@ -170,6 +170,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
           <table className="w-full text-left text-sm text-slate-600">
             <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
               <tr>
+                <th className="px-4 py-4 text-center w-12">S.NO</th>
                 <th className="px-6 py-4">Contract No</th>
                 <th className="px-6 py-4">Project Details</th>
                 <th className="px-6 py-4">Client & Location</th>
@@ -183,14 +184,14 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">Loading active projects...</td>
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400">Loading active projects...</td>
                 </tr>
               ) : projects.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-400">No projects found matching criteria.</td>
+                  <td colSpan={9} className="px-6 py-8 text-center text-slate-400">No projects found matching criteria.</td>
                 </tr>
               ) : (
-                projects.map((p) => {
+                projects.map((p, index) => {
                   const estimateVal = p.contractValue || 1000000;
                   const spent = p.totalBilled || Math.round(estimateVal * (p.completionPercentage / 100));
                   const spentPct = Math.min(100, Math.max(0, (spent / estimateVal) * 100));
@@ -203,6 +204,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({ onSelectProject }) => 
                       className="hover:bg-slate-50 transition-colors cursor-pointer group"
                       onClick={() => onSelectProject(p.id)}
                     >
+                      <td className="px-4 py-4 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-xs font-bold text-blue-600">{p.contractNumber}</span>
                       </td>

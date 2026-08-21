@@ -160,6 +160,7 @@ export const WorkOrderModule: React.FC = () => {
           <table className="w-full text-left text-xs text-slate-700">
             <thead className="bg-slate-50 border-b text-[11px] font-bold uppercase text-slate-500">
               <tr>
+                <th className="px-3 py-3.5 text-center w-12">S.NO</th>
                 <th className="px-4 py-3.5">Work Order Ref & Title</th>
                 <th className="px-4 py-3.5">Contract Type</th>
                 <th className="px-4 py-3.5">Client / Subcontractor</th>
@@ -173,12 +174,13 @@ export const WorkOrderModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
               {loading ? (
-                <tr><td colSpan={9} className="p-8 text-center text-slate-400">Loading work orders...</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-slate-400">Loading work orders...</td></tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={9} className="p-8 text-center text-slate-400">No work order contracts found.</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-slate-400">No work order contracts found.</td></tr>
               ) : (
-                filtered.map((wo) => (
+                filtered.map((wo, index) => (
                   <tr key={wo.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-3.5 text-center font-mono text-slate-400 font-bold">{index + 1}</td>
                     <td className="px-4 py-3.5">
                       <div className="font-bold text-slate-900">{wo.title}</div>
                       <div className="text-[10px] text-slate-400 font-mono">{wo.workOrderNumber}</div>
@@ -198,14 +200,24 @@ export const WorkOrderModule: React.FC = () => {
                     <td className="px-4 py-3.5 text-right font-black text-blue-900 text-sm">{formatINR(wo.value)}</td>
                     <td className="px-4 py-3.5 text-center">
                       {wo.workOrderDoc ? (
-                        <a
-                          href={wo.workOrderDoc}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[11px] font-bold"
-                        >
-                          📄 WO Doc (PDF)
-                        </a>
+                        <div className="inline-flex items-center gap-1">
+                          <a
+                            href={wo.workOrderDoc}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 rounded text-[11px] font-bold"
+                          >
+                            📄 WO Doc (PDF)
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => setWorkOrders(prev => prev.map(x => x.id === wo.id ? { ...x, workOrderDoc: undefined } : x))}
+                            className="p-1 hover:bg-rose-100 text-rose-600 rounded text-xs font-bold transition-colors"
+                            title="Delete Work Order Document"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       ) : (
                         <label className="cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[11px] font-semibold hover:bg-slate-200">
                           + Attach Doc
